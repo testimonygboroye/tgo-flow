@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { env } from './config/env';
 import { connectDB } from './config/db';
 import authRoutes from './routes/auth.routes';
+import workspaceRoutes from './routes/workspace.routes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -17,6 +18,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/workspaces', workspaceRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ status: 'error', message: 'Route not found' });
