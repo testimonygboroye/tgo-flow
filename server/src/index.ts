@@ -1,3 +1,4 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -7,8 +8,10 @@ import authRoutes from './routes/auth.routes';
 import workspaceRoutes from './routes/workspace.routes';
 import boardRoutes from './routes/board.routes';
 import { errorHandler } from './middleware/errorHandler';
+import { initSocketServer } from './sockets';
 
 const app = express();
+const httpServer = http.createServer(app);
 
 app.use(cors({ origin: env.clientUrl, credentials: true }));
 app.use(express.json());
@@ -30,7 +33,8 @@ app.use(errorHandler);
 
 async function start() {
   await connectDB();
-  app.listen(env.port, () => {
+  initSocketServer(httpServer);
+  httpServer.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
   });
 }

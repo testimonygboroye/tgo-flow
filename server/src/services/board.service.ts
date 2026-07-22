@@ -2,6 +2,7 @@ import { Board } from '../models/Board';
 import { List } from '../models/List';
 import { Task } from '../models/Task';
 import { AppError } from '../utils/AppError';
+import { emitToBoard } from '../sockets';
 
 export async function createBoard(workspaceId: string, userId: string, name: string) {
   const board = await Board.create({ workspace: workspaceId, name, createdBy: userId });
@@ -48,7 +49,9 @@ export async function deleteBoard(boardId: string, workspaceId: string) {
 export async function createList(boardId: string, name: string) {
   const lastList = await List.findOne({ board: boardId }).sort({ position: -1 });
   const position = lastList ? lastList.position + 1 : 0;
-  return List.create({ board: boardId, name, position });
+  const list = await List.create({ board: boardId, name, position });
+  emitToBoard(boardId, 'list:created', list);
+  return list;
 }
 
 export async function reorderList(listId: string, boardId: string, newPosition: number) {
@@ -58,6 +61,7 @@ export async function reorderList(listId: string, boardId: string, newPosition: 
   }
   list.position = newPosition;
   await list.save();
+  emitToBoard(boardId, 'list:updated', list);
   return list;
 }
 
@@ -68,4 +72,5 @@ export async function deleteList(listId: string, boardId: string) {
   }
   await Task.deleteMany({ list: listId });
   await List.deleteOne({ _id: listId });
+  emitToBoard(boardId, 'list:deleted', { listId });
 }

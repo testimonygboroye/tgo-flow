@@ -2,6 +2,7 @@ import { Task } from '../models/Task';
 import { List } from '../models/List';
 import { Comment } from '../models/Comment';
 import { AppError } from '../utils/AppError';
+import { emitToBoard } from '../sockets';
 
 interface CreateTaskInput {
   listId: string;
@@ -23,7 +24,7 @@ export async function createTask(input: CreateTaskInput) {
   const lastTask = await Task.findOne({ list: input.listId }).sort({ position: -1 });
   const position = lastTask ? lastTask.position + 1 : 0;
 
-  return Task.create({
+  const task = await Task.create({
     list: input.listId,
     board: input.boardId,
     title: input.title,
@@ -34,6 +35,9 @@ export async function createTask(input: CreateTaskInput) {
     dueDate: input.dueDate ? new Date(input.dueDate) : null,
     createdBy: input.createdBy,
   });
+
+  emitToBoard(input.boardId, 'task:created', task);
+  return task;
 }
 
 export async function listTasksForBoard(boardId: string) {
@@ -74,6 +78,7 @@ export async function updateTask(taskId: string, boardId: string, updates: Updat
   if (updates.assignees !== undefined) task.assignees = updates.assignees as any;
 
   await task.save();
+  emitToBoard(boardId, 'task:updated', task);
   return task;
 }
 
@@ -91,6 +96,7 @@ export async function moveTask(taskId: string, boardId: string, newListId: strin
   task.list = targetList._id;
   task.position = newPosition;
   await task.save();
+  emitToBoard(boardId, 'task:moved', task);
   return task;
 }
 
@@ -101,6 +107,7 @@ export async function deleteTask(taskId: string, boardId: string) {
   }
   await Comment.deleteMany({ task: taskId });
   await Task.deleteOne({ _id: taskId });
+  emitToBoard(boardId, 'task:deleted', { taskId });
 }
 
 export async function addComment(taskId: string, boardId: string, authorId: string, body: string) {
@@ -109,7 +116,9 @@ export async function addComment(taskId: string, boardId: string, authorId: stri
     throw new AppError('Task not found', 404);
   }
   const comment = await Comment.create({ task: taskId, author: authorId, body });
-  return comment.populate('author', 'name email');
+  const populated = await comment.populate('author', 'name email');
+  emitToBoard(boardId, 'comment:created', populated);
+  return populated;
 }
 
 export async function listComments(taskId: string, boardId: string) {
