@@ -9,10 +9,11 @@ const REFRESH_COOKIE_NAME = 'refreshToken';
 const REFRESH_COOKIE_PATH = '/api/auth';
 
 function setRefreshCookie(res: Response, token: string): void {
+  const isProduction = env.nodeEnv === 'production';
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: env.nodeEnv === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     path: REFRESH_COOKIE_PATH,
     maxAge: parseDurationToMs(env.jwtRefreshExpires),
   });
