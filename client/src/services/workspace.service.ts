@@ -1,5 +1,5 @@
 import { api } from '../lib/api';
-import { Workspace, WorkspaceMembership, Member, MembershipRole } from '../types';
+import type { Workspace, WorkspaceMembership, Member, MembershipRole } from '../types';
 
 export async function createWorkspaceRequest(name: string): Promise<Workspace> {
   const { data } = await api.post('/workspaces', { name });
