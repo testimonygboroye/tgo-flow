@@ -85,7 +85,7 @@ export function Dashboard() {
         {isCreating && (
           <form
             onSubmit={handleCreateWorkspace}
-            className="mb-8 flex items-center gap-3 rounded-xl border border-border bg-surface p-4"
+            className="mb-8 flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center"
           >
             <input
               autoFocus
@@ -93,25 +93,27 @@ export function Dashboard() {
               value={newWorkspaceName}
               onChange={(e) => setNewWorkspaceName(e.target.value)}
               placeholder="Workspace name (e.g. Bella's Bakery)"
-              className="flex-1 rounded-lg border border-border bg-bg px-3.5 py-2 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+              className="w-full min-w-0 flex-1 rounded-lg border border-border bg-bg px-3.5 py-2 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
             />
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-lg bg-brand-gradient px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
-            >
-              Create
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsCreating(false);
-                setNewWorkspaceName('');
-              }}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover"
-            >
-              Cancel
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 rounded-lg bg-brand-gradient px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50 sm:flex-none"
+              >
+                Create
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCreating(false);
+                  setNewWorkspaceName('');
+                }}
+                className="flex-1 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover sm:flex-none"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         )}
 

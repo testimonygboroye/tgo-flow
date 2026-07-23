@@ -129,25 +129,27 @@ export function WorkspaceDetail() {
             </div>
 
             {isCreatingBoard && (
-              <form onSubmit={handleCreateBoard} className="mb-6 flex items-center gap-3 rounded-xl border border-border bg-surface p-4">
+              <form onSubmit={handleCreateBoard} className="mb-6 flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center">
                 <input
                   autoFocus
                   type="text"
                   value={newBoardName}
                   onChange={(e) => setNewBoardName(e.target.value)}
                   placeholder="Board name (e.g. Website Redesign)"
-                  className="flex-1 rounded-lg border border-border bg-bg px-3.5 py-2 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                  className="w-full min-w-0 flex-1 rounded-lg border border-border bg-bg px-3.5 py-2 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                 />
-                <button type="submit" className="rounded-lg bg-brand-gradient px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-                  Create
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setIsCreatingBoard(false); setNewBoardName(''); }}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover"
-                >
-                  Cancel
-                </button>
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 rounded-lg bg-brand-gradient px-4 py-2 text-sm font-medium text-white hover:opacity-90 sm:flex-none">
+                    Create
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsCreatingBoard(false); setNewBoardName(''); }}
+                    className="flex-1 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover sm:flex-none"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
             )}
 
