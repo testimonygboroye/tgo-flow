@@ -6,6 +6,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
+import { WorkspaceDetail } from './pages/WorkspaceDetail';
+import { AcceptInvite } from './pages/AcceptInvite';
 
 function AppRoutes() {
   useAuthBootstrap();
@@ -16,7 +18,9 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/workspaces/:workspaceId" element={<WorkspaceDetail />} />
       </Route>
+      <Route path="/invites/accept" element={<AcceptInvite />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

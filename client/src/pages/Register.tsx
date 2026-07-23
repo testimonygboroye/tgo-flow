@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { registerRequest } from '../services/auth.service';
 import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
+import { PasswordInput } from '../components/PasswordInput';
 import { ThemeToggle } from '../components/ThemeToggle';
 import axios from 'axios';
 
@@ -82,21 +83,15 @@ export function Register() {
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-text-primary">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-text-primary outline-none transition focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
-                placeholder="At least 8 characters, with a number"
-              />
-            </div>
+            <PasswordInput
+              id="password"
+              label="Password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 8 characters, with a number"
+            />
 
             {error && (
               <div className="rounded-lg bg-danger/10 border border-danger/20 px-3.5 py-2.5 text-sm text-danger">

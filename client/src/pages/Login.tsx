@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { loginRequest } from '../services/auth.service';
 import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
+import { PasswordInput } from '../components/PasswordInput';
 import { ThemeToggle } from '../components/ThemeToggle';
 import axios from 'axios';
 
@@ -66,19 +67,18 @@ export function Login() {
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-text-primary">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-text-primary outline-none transition focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
-                placeholder="••••••••"
-              />
+            <PasswordInput
+              id="password"
+              label="Password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+            <div className="text-right -mt-2">
+              <Link to="/forgot-password" className="text-sm font-medium text-brand-violet hover:underline">
+                Forgot password?
+              </Link>
             </div>
 
             {error && (
