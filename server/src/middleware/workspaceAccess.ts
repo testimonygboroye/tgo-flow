@@ -2,11 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { getMembershipRole } from '../services/workspace.service';
 import { AppError } from '../utils/AppError';
 import { MembershipRole } from '../models/Membership';
+import { getParam } from '../utils/params';
 
 export function requireWorkspaceRole(...allowedRoles: MembershipRole[]) {
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
-      const workspaceId = req.params.workspaceId || req.params.id;
+      const workspaceId = getParam(req, 'workspaceId') || getParam(req, 'id');
       const userId = req.userId as string;
 
       const role = await getMembershipRole(workspaceId, userId);

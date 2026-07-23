@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { register, login, refresh, logout } from '../controllers/auth.controller';
+import { register, login, refresh, logout, me } from '../controllers/auth.controller';
+import { protect } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 
 const router = Router();
@@ -32,5 +33,6 @@ router.post(
 
 router.post('/refresh', refresh);
 router.post('/logout', logout);
+router.get('/me', protect, me);
 
 export default router;

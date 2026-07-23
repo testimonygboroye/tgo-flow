@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { registerUser, loginUser, refreshTokens, logoutUser } from '../services/auth.service';
+import { User } from '../models/User';
+import { AppError } from '../utils/AppError';
 import { env } from '../config/env';
 import { parseDurationToMs } from '../utils/time';
 
@@ -66,6 +68,21 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
     }
     clearRefreshCookie(res);
     res.status(200).json({ status: 'success', message: 'Logged out' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function me(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+    res.status(200).json({
+      status: 'success',
+      user: { id: user._id.toString(), name: user.name, email: user.email },
+    });
   } catch (err) {
     next(err);
   }

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as workspaceService from '../services/workspace.service';
+import { getParam } from '../utils/params';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -22,7 +23,7 @@ export async function list(req: Request, res: Response, next: NextFunction): Pro
 
 export async function getOne(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await workspaceService.getWorkspaceIfMember(req.params.id, req.userId as string);
+    const result = await workspaceService.getWorkspaceIfMember(getParam(req, 'id'), req.userId as string);
     res.status(200).json({ status: 'success', ...result });
   } catch (err) {
     next(err);
@@ -31,7 +32,7 @@ export async function getOne(req: Request, res: Response, next: NextFunction): P
 
 export async function listMembers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const members = await workspaceService.listWorkspaceMembers(req.params.id);
+    const members = await workspaceService.listWorkspaceMembers(getParam(req, 'id'));
     res.status(200).json({ status: 'success', members });
   } catch (err) {
     next(err);
@@ -42,7 +43,7 @@ export async function invite(req: Request, res: Response, next: NextFunction): P
   try {
     const { email, role } = req.body;
     const { invite: createdInvite, rawToken } = await workspaceService.inviteMember(
-      req.params.id,
+      getParam(req, 'id'),
       req.userId as string,
       email,
       role
@@ -71,8 +72,8 @@ export async function updateMemberRole(req: Request, res: Response, next: NextFu
   try {
     const { role } = req.body;
     const membership = await workspaceService.updateMemberRole(
-      req.params.id,
-      req.params.userId,
+      getParam(req, 'id'),
+      getParam(req, 'userId'),
       role,
       req.workspaceRole as any
     );
@@ -84,7 +85,7 @@ export async function updateMemberRole(req: Request, res: Response, next: NextFu
 
 export async function removeMember(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    await workspaceService.removeMember(req.params.id, req.params.userId, req.workspaceRole as any);
+    await workspaceService.removeMember(getParam(req, 'id'), getParam(req, 'userId'), req.workspaceRole as any);
     res.status(200).json({ status: 'success', message: 'Member removed' });
   } catch (err) {
     next(err);
