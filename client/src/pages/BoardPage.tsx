@@ -8,6 +8,7 @@ import { listTasksRequest, createTaskRequest, moveTaskRequest } from '../service
 import { getWorkspaceMembersRequest } from '../services/workspace.service';
 import { useBoardSocket } from '../hooks/useBoardSocket';
 import { BoardColumn } from '../components/BoardColumn';
+import { BoardFilterBar } from '../components/BoardFilterBar';
 import { TaskDetailModal } from '../components/TaskDetailModal';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -18,6 +19,9 @@ export function BoardPage() {
   const queryClient = useQueryClient();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAddingList, setIsAddingList] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
   const [newListName, setNewListName] = useState('');
 
   useBoardSocket(boardId, workspaceId);
@@ -77,6 +81,36 @@ export function BoardPage() {
     }
   }
 
+  const filteredTasks = (tasks || []).filter((task) => {
+    const matchesSearch =
+      searchTerm.trim().length === 0 ||
+      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesLabels =
+      selectedLabels.length === 0 || selectedLabels.some((label) => task.labels.includes(label));
+
+    const matchesAssignees =
+      selectedAssigneeIds.length === 0 ||
+      task.assignees.some((a) => selectedAssigneeIds.includes(a.id));
+
+    return matchesSearch && matchesLabels && matchesAssignees;
+  });
+
+  function toggleLabel(label: string) {
+    setSelectedLabels((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
+  }
+
+  function toggleAssignee(userId: string) {
+    setSelectedAssigneeIds((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]));
+  }
+
+  function clearFilters() {
+    setSearchTerm('');
+    setSelectedLabels([]);
+    setSelectedAssigneeIds([]);
+  }
+
   if (boardLoading || !boardData) {
     return (
       <div className="flex h-screen items-center justify-center bg-bg">
@@ -103,13 +137,25 @@ export function BoardPage() {
         </div>
       </header>
 
+      <BoardFilterBar
+        tasks={tasks || []}
+        members={members || []}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedLabels={selectedLabels}
+        onToggleLabel={toggleLabel}
+        selectedAssigneeIds={selectedAssigneeIds}
+        onToggleAssignee={toggleAssignee}
+        onClearFilters={clearFilters}
+      />
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex flex-1 gap-4 overflow-x-auto p-6">
           {sortedLists.map((list) => (
             <BoardColumn
               key={list._id}
               list={list}
-              tasks={(tasks || []).filter((t) => t.list === list._id).sort((a, b) => a.position - b.position)}
+              tasks={filteredTasks.filter((t) => t.list === list._id).sort((a, b) => a.position - b.position)}
               onTaskClick={setSelectedTask}
               onAddTask={handleAddTask}
             />
