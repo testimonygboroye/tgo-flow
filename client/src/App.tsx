@@ -9,6 +9,8 @@ import { Dashboard } from './pages/Dashboard';
 import { WorkspaceDetail } from './pages/WorkspaceDetail';
 import { AcceptInvite } from './pages/AcceptInvite';
 import { BoardPage } from './pages/BoardPage';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 
 function AppRoutes() {
   useAuthBootstrap();
@@ -17,6 +19,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/workspaces/:workspaceId" element={<WorkspaceDetail />} />
