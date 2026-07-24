@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { registerUser, loginUser, refreshTokens, logoutUser } from '../services/auth.service';
+import { registerUser, loginUser, refreshTokens, logoutUser, requestPasswordReset, resetPassword } from '../services/auth.service';
 import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { env } from '../config/env';
@@ -84,6 +84,29 @@ export async function me(req: Request, res: Response, next: NextFunction): Promi
       status: 'success',
       user: { id: user._id.toString(), name: user.name, email: user.email },
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email } = req.body;
+    await requestPasswordReset(email);
+    res.status(200).json({
+      status: 'success',
+      message: 'If an account with that email exists, a password reset link has been sent.',
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPasswordHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { token, password } = req.body;
+    await resetPassword(token, password);
+    res.status(200).json({ status: 'success', message: 'Password has been reset successfully.' });
   } catch (err) {
     next(err);
   }

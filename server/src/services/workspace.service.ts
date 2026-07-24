@@ -6,6 +6,8 @@ import { Invite } from '../models/Invite';
 import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { sha256 } from '../utils/hash';
+import { sendInviteEmail } from './email.service';
+import { env } from '../config/env';
 
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -86,6 +88,10 @@ export async function inviteMember(
     invitedBy,
     expiresAt,
   });
+
+  const workspace = await Workspace.findById(workspaceId);
+  const inviteLink = `${env.clientUrl}/invites/accept?token=${rawToken}`;
+  await sendInviteEmail(normalizedEmail, workspace?.name || 'a workspace', role, inviteLink);
 
   return { invite, rawToken };
 }

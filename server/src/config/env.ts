@@ -16,4 +16,7 @@ export const env = {
   jwtAccessExpires: process.env.JWT_ACCESS_EXPIRES || '15m',
   jwtRefreshExpires: process.env.JWT_REFRESH_EXPIRES || '7d',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  brevoApiKey: required('BREVO_API_KEY'),
+  senderEmail: required('SENDER_EMAIL'),
+  senderName: process.env.SENDER_NAME || 'TGO Flow',
 };
