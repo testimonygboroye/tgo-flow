@@ -8,12 +8,14 @@ import { AppError } from '../utils/AppError';
 import { sha256 } from '../utils/hash';
 import { sendInviteEmail } from './email.service';
 import { env } from '../config/env';
+import { logActivity } from './activity.service';
 
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export async function createWorkspace(userId: string, name: string) {
   const workspace = await Workspace.create({ name, owner: new Types.ObjectId(userId) });
   await Membership.create({ workspace: workspace._id, user: userId, role: 'owner' });
+  await logActivity(workspace._id.toString(), userId, 'workspace_created');
   return workspace;
 }
 
@@ -92,6 +94,7 @@ export async function inviteMember(
   const workspace = await Workspace.findById(workspaceId);
   const inviteLink = `${env.clientUrl}/invites/accept?token=${rawToken}`;
   await sendInviteEmail(normalizedEmail, workspace?.name || 'a workspace', role, inviteLink);
+  await logActivity(workspaceId, invitedBy, 'member_invited', normalizedEmail);
 
   return { invite, rawToken };
 }
@@ -130,6 +133,8 @@ export async function acceptInvite(rawToken: string, userId: string) {
   invite.status = 'accepted';
   await invite.save();
 
+  await logActivity(invite.workspace.toString(), userId, 'member_joined');
+
   const workspace = await Workspace.findById(invite.workspace);
   return workspace;
 }
@@ -159,6 +164,10 @@ export async function updateMemberRole(
 
   membership.role = newRole;
   await membership.save();
+
+  const targetUser = await User.findById(targetUserId);
+  await logActivity(workspaceId, targetUserId, 'member_role_changed', `${targetUser?.name || 'a member'}'s role to ${newRole}`);
+
   return membership;
 }
 
@@ -176,5 +185,7 @@ export async function removeMember(workspaceId: string, targetUserId: string, re
     throw new AppError('Only the workspace owner can remove an admin', 403);
   }
 
+  const targetUser = await User.findById(targetUserId);
   await Membership.deleteOne({ _id: membership._id });
+  await logActivity(workspaceId, targetUserId, 'member_removed', targetUser?.name || 'a member');
 }

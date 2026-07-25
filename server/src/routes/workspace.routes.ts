@@ -4,6 +4,7 @@ import { protect } from '../middleware/auth';
 import { requireWorkspaceRole } from '../middleware/workspaceAccess';
 import { validate } from '../middleware/validate';
 import * as workspaceController from '../controllers/workspace.controller';
+import * as activityController from '../controllers/activity.controller';
 
 const router = Router();
 
@@ -28,6 +29,8 @@ router.post(
 router.get('/:id', requireWorkspaceRole('owner', 'admin', 'member'), workspaceController.getOne);
 
 router.get('/:id/members', requireWorkspaceRole('owner', 'admin', 'member'), workspaceController.listMembers);
+
+router.get('/:id/activity', requireWorkspaceRole('owner', 'admin', 'member'), activityController.list);
 
 router.post(
   '/:id/invites',

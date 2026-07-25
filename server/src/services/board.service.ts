@@ -3,9 +3,11 @@ import { List } from '../models/List';
 import { Task } from '../models/Task';
 import { AppError } from '../utils/AppError';
 import { emitToBoard } from '../sockets';
+import { logActivity } from './activity.service';
 
 export async function createBoard(workspaceId: string, userId: string, name: string) {
   const board = await Board.create({ workspace: workspaceId, name, createdBy: userId });
+  await logActivity(workspaceId, userId, 'board_created', name);
 
   const defaultListNames = ['To Do', 'In Progress', 'Done'];
   const lists = await List.insertMany(

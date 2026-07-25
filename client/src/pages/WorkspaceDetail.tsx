@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getWorkspaceMembersRequest, inviteMemberRequest } from '../services/workspace.service';
+import { listActivityRequest } from '../services/activity.service';
 import { createBoardRequest, listBoardsRequest } from '../services/board.service';
 import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
@@ -10,7 +11,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import axios from 'axios';
 import type { MembershipRole } from '../types';
 
-type Tab = 'boards' | 'members';
+type Tab = 'boards' | 'members' | 'activity';
 
 export function WorkspaceDetail() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -39,6 +40,12 @@ export function WorkspaceDetail() {
     queryKey: ['members', workspaceId],
     queryFn: () => getWorkspaceMembersRequest(workspaceId!),
     enabled: !!workspaceId,
+  });
+
+  const { data: activity, isLoading: activityLoading } = useQuery({
+    queryKey: ['activity', workspaceId],
+    queryFn: () => listActivityRequest(workspaceId!),
+    enabled: !!workspaceId && tab === 'activity',
   });
 
   const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
@@ -113,6 +120,16 @@ export function WorkspaceDetail() {
             }`}
           >
             Members
+          </button>
+          <button
+            onClick={() => setTab('activity')}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition ${
+              tab === 'activity'
+                ? 'border-brand-violet text-brand-violet'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            Activity
           </button>
         </div>
 
@@ -272,6 +289,44 @@ export function WorkspaceDetail() {
                     </span>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+        {tab === 'activity' && (
+          <div>
+            <h1 className="mb-6 font-display text-xl font-bold text-text-primary">Activity</h1>
+            {activityLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-violet border-t-transparent" />
+              </div>
+            ) : activity && activity.length > 0 ? (
+              <div className="overflow-hidden rounded-xl border border-border bg-surface">
+                {activity.map((a, i) => (
+                  <div
+                    key={a._id}
+                    className={`flex items-start gap-3 px-5 py-3.5 ${i !== 0 ? 'border-t border-border' : ''}`}
+                  >
+                    <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-gradient text-[10px] font-semibold text-white">
+                      {a.actor.name.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm text-text-primary">{a.description}</p>
+                      <p className="text-xs text-text-secondary">
+                        {new Date(a.createdAt).toLocaleString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border bg-surface/50 py-16 text-center">
+                <p className="text-text-secondary">No activity yet.</p>
               </div>
             )}
           </div>

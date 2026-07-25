@@ -1,8 +1,10 @@
 import { Task } from '../models/Task';
 import { List } from '../models/List';
 import { Comment } from '../models/Comment';
+import { Board } from '../models/Board';
 import { AppError } from '../utils/AppError';
 import { emitToBoard } from '../sockets';
+import { logActivity } from './activity.service';
 
 interface CreateTaskInput {
   listId: string;
@@ -37,6 +39,12 @@ export async function createTask(input: CreateTaskInput) {
   });
 
   emitToBoard(input.boardId, 'task:created', task);
+
+  const board = await Board.findById(input.boardId);
+  if (board) {
+    await logActivity(board.workspace.toString(), input.createdBy, 'task_created', input.title);
+  }
+
   return task;
 }
 
@@ -100,6 +108,13 @@ export async function moveTask(taskId: string, boardId: string, newListId: strin
   return task;
 }
 
+export async function logTaskMove(boardId: string, actorId: string, taskTitle: string) {
+  const board = await Board.findById(boardId);
+  if (board) {
+    await logActivity(board.workspace.toString(), actorId, 'task_moved', taskTitle);
+  }
+}
+
 export async function deleteTask(taskId: string, boardId: string) {
   const task = await Task.findOne({ _id: taskId, board: boardId });
   if (!task) {
@@ -108,6 +123,11 @@ export async function deleteTask(taskId: string, boardId: string) {
   await Comment.deleteMany({ task: taskId });
   await Task.deleteOne({ _id: taskId });
   emitToBoard(boardId, 'task:deleted', { taskId });
+
+  const board = await Board.findById(boardId);
+  if (board) {
+    await logActivity(board.workspace.toString(), task.createdBy.toString(), 'task_deleted', task.title);
+  }
 }
 
 export async function addComment(taskId: string, boardId: string, authorId: string, body: string) {
@@ -118,6 +138,12 @@ export async function addComment(taskId: string, boardId: string, authorId: stri
   const comment = await Comment.create({ task: taskId, author: authorId, body });
   const populated = await comment.populate('author', 'name email');
   emitToBoard(boardId, 'comment:created', populated);
+
+  const board = await Board.findById(boardId);
+  if (board) {
+    await logActivity(board.workspace.toString(), authorId, 'task_commented', task.title);
+  }
+
   return populated;
 }
 
