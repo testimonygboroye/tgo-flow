@@ -2,6 +2,7 @@ import { Task } from '../models/Task';
 import { List } from '../models/List';
 import { Comment } from '../models/Comment';
 import { Board } from '../models/Board';
+import { Membership } from '../models/Membership';
 import { AppError } from '../utils/AppError';
 import { emitToBoard } from '../sockets';
 import { logActivity } from './activity.service';
@@ -17,10 +18,23 @@ interface CreateTaskInput {
   assignees?: string[];
 }
 
+async function validateAssigneesAreMembers(workspaceId: string, assigneeIds: string[]): Promise<void> {
+  if (assigneeIds.length === 0) return;
+  const memberships = await Membership.find({ workspace: workspaceId, user: { $in: assigneeIds } });
+  if (memberships.length !== assigneeIds.length) {
+    throw new AppError('One or more assignees are not members of this workspace', 400);
+  }
+}
+
 export async function createTask(input: CreateTaskInput) {
   const list = await List.findOne({ _id: input.listId, board: input.boardId });
   if (!list) {
     throw new AppError('List not found on this board', 404);
+  }
+
+  const board = await Board.findById(input.boardId);
+  if (input.assignees && input.assignees.length > 0 && board) {
+    await validateAssigneesAreMembers(board.workspace.toString(), input.assignees);
   }
 
   const lastTask = await Task.findOne({ list: input.listId }).sort({ position: -1 });
@@ -40,7 +54,6 @@ export async function createTask(input: CreateTaskInput) {
 
   emitToBoard(input.boardId, 'task:created', task);
 
-  const board = await Board.findById(input.boardId);
   if (board) {
     await logActivity(board.workspace.toString(), input.createdBy, 'task_created', input.title);
   }
@@ -83,7 +96,13 @@ export async function updateTask(taskId: string, boardId: string, updates: Updat
   if (updates.description !== undefined) task.description = updates.description;
   if (updates.dueDate !== undefined) task.dueDate = updates.dueDate ? new Date(updates.dueDate) : null;
   if (updates.labels !== undefined) task.labels = updates.labels;
-  if (updates.assignees !== undefined) task.assignees = updates.assignees as any;
+  if (updates.assignees !== undefined) {
+    const taskBoard = await Board.findById(boardId);
+    if (taskBoard) {
+      await validateAssigneesAreMembers(taskBoard.workspace.toString(), updates.assignees);
+    }
+    task.assignees = updates.assignees as any;
+  }
 
   await task.save();
   emitToBoard(boardId, 'task:updated', task);

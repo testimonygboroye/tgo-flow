@@ -28,4 +28,6 @@ const inviteSchema = new Schema<IInvite>(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
+inviteSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
 export const Invite = model<IInvite>('Invite', inviteSchema);
