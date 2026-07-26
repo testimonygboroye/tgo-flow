@@ -1,4 +1,5 @@
 import { env } from '../config/env';
+import { escapeHtml } from '../utils/htmlEscape';
 
 interface SendEmailInput {
   to: string;
@@ -31,14 +32,17 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
 }
 
 export async function sendInviteEmail(toEmail: string, workspaceName: string, role: string, inviteLink: string): Promise<void> {
+  const safeWorkspaceName = escapeHtml(workspaceName);
+  const safeRole = escapeHtml(role);
+
   await sendEmail({
     to: toEmail,
-    subject: `You've been invited to join ${workspaceName} on TGO Flow`,
+    subject: `You've been invited to join ${safeWorkspaceName} on TGO Flow`,
     htmlContent: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
         <h2 style="color: #1B1830;">You're invited to TGO Flow</h2>
         <p style="color: #6E6A85; font-size: 15px; line-height: 1.5;">
-          You've been invited to join <strong>${workspaceName}</strong> as a <strong>${role}</strong>.
+          You've been invited to join <strong>${safeWorkspaceName}</strong> as a <strong>${safeRole}</strong>.
         </p>
         <a href="${inviteLink}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: linear-gradient(135deg, #7C3AED, #22D3EE); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
           Accept Invite
