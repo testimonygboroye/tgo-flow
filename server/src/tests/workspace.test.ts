@@ -113,4 +113,21 @@ describe('Workspace creation and permissions', () => {
     expect(res.body.board.name).toBe('Jest Test Board');
     expect(res.body.lists.length).toBe(3);
   });
+
+  it('denies a member from creating a board (owner/admin only)', async () => {
+    const res = await request(app)
+      .post(`/api/workspaces/${workspaceId}/boards`)
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ name: 'Unauthorized Board Attempt' });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('allows a member to still view boards (read access preserved)', async () => {
+    const res = await request(app)
+      .get(`/api/workspaces/${workspaceId}/boards`)
+      .set('Authorization', `Bearer ${memberToken}`);
+
+    expect(res.status).toBe(200);
+  });
 });
