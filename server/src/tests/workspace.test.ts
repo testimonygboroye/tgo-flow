@@ -103,6 +103,30 @@ describe('Workspace creation and permissions', () => {
     expect(res.status).toBe(403);
   });
 
+  it('rejects assigning a task to a user who is not a workspace member', async () => {
+    const boardRes = await request(app)
+      .post(`/api/workspaces/${workspaceId}/boards`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ name: 'Assignee Validation Board' });
+    const listId = boardRes.body.lists[0]._id;
+    const boardId = boardRes.body.board._id;
+
+    const outsiderRes = await request(app).post('/api/auth/register').send({
+      name: 'Outsider',
+      email: 'jest-outsider@example.com',
+      password: 'TestPass123',
+    });
+    const outsiderId = outsiderRes.body.user.id;
+
+    const res = await request(app)
+      .post(`/api/workspaces/${workspaceId}/boards/${boardId}/tasks/list/${listId}`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ title: 'Task with bad assignee', assignees: [outsiderId] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/not members of this workspace/i);
+  });
+
   it('creates a board within the workspace', async () => {
     const res = await request(app)
       .post(`/api/workspaces/${workspaceId}/boards`)
