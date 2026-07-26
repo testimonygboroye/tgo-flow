@@ -16,6 +16,7 @@ import { initSocketServer } from './sockets';
 import { generalApiLimiter } from './middleware/rateLimiter';
 
 const app = express();
+app.set('trust proxy', 1);
 const httpServer = http.createServer(app);
 
 app.use(helmet());
