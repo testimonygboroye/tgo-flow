@@ -2,6 +2,8 @@ import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { verifyAccessToken } from '../utils/jwt';
 import { env } from '../config/env';
+import { Board } from '../models/Board';
+import { Membership } from '../models/Membership';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -35,8 +37,18 @@ export function initSocketServer(httpServer: HttpServer): SocketIOServer {
   io.on('connection', (socket: AuthenticatedSocket) => {
     console.log(`Socket connected: ${socket.id} (user ${socket.userId})`);
 
-    socket.on('board:join', (boardId: string) => {
-      socket.join(`board:${boardId}`);
+    socket.on('board:join', async (boardId: string) => {
+      try {
+        const board = await Board.findById(boardId);
+        if (!board) return;
+
+        const membership = await Membership.findOne({ workspace: board.workspace, user: socket.userId });
+        if (!membership) return;
+
+        socket.join(`board:${boardId}`);
+      } catch {
+        // Silently ignore malformed board IDs or lookup failures — no need to leak details to the client.
+      }
     });
 
     socket.on('board:leave', (boardId: string) => {
