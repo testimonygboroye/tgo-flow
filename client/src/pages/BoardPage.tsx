@@ -12,6 +12,7 @@ import { BoardFilterBar } from '../components/BoardFilterBar';
 import { TaskDetailModal } from '../components/TaskDetailModal';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { useAuthStore } from '../store/auth.store';
 import type { Task } from '../types';
 import { filterTasks } from '../utils/taskFilters';
 
@@ -38,6 +39,8 @@ export function BoardPage() {
     queryFn: () => listTasksRequest(workspaceId!, boardId!),
     enabled: !!workspaceId && !!boardId,
   });
+
+  const { user } = useAuthStore();
 
   const { data: members } = useQuery({
     queryKey: ['members', workspaceId],
@@ -98,6 +101,9 @@ export function BoardPage() {
     setSelectedAssigneeIds([]);
   }
 
+  const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
+  const canManage = myMembership?.role === 'owner' || myMembership?.role === 'admin';
+
   if (boardLoading || !boardData) {
     return (
       <div className="flex h-screen items-center justify-center bg-bg">
@@ -148,6 +154,7 @@ export function BoardPage() {
             />
           ))}
 
+          {canManage && (
           <div className="w-72 flex-shrink-0">
             {isAddingList ? (
               <form onSubmit={handleAddList} className="rounded-xl border border-border bg-surface p-3">
@@ -170,6 +177,7 @@ export function BoardPage() {
               </button>
             )}
           </div>
+          )}
         </div>
       </DragDropContext>
 
