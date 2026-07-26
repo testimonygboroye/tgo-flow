@@ -137,12 +137,14 @@ export function WorkspaceDetail() {
           <div>
             <div className="mb-6 flex items-center justify-between">
               <h1 className="font-display text-xl font-bold text-text-primary">Boards</h1>
-              <button
-                onClick={() => setIsCreatingBoard(true)}
-                className="rounded-lg bg-brand-gradient px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-              >
-                + New board
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => setIsCreatingBoard(true)}
+                  className="rounded-lg bg-brand-gradient px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                >
+                  + New board
+                </button>
+              )}
             </div>
 
             {isCreatingBoard && (
