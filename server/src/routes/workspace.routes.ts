@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import { protect } from '../middleware/auth';
 import { requireWorkspaceRole } from '../middleware/workspaceAccess';
 import { validate } from '../middleware/validate';
+import { inviteLimiter } from '../middleware/rateLimiter';
 import * as workspaceController from '../controllers/workspace.controller';
 import * as activityController from '../controllers/activity.controller';
 
@@ -35,6 +36,7 @@ router.get('/:id/activity', requireWorkspaceRole('owner', 'admin', 'member'), ac
 router.post(
   '/:id/invites',
   requireWorkspaceRole('owner', 'admin'),
+  inviteLimiter,
   [
     body('email').isEmail().withMessage('A valid email is required'),
     body('role').isIn(['admin', 'member']).withMessage('Role must be admin or member'),
