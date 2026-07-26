@@ -13,6 +13,7 @@ import { TaskDetailModal } from '../components/TaskDetailModal';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import type { Task } from '../types';
+import { filterTasks } from '../utils/taskFilters';
 
 export function BoardPage() {
   const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
@@ -81,21 +82,7 @@ export function BoardPage() {
     }
   }
 
-  const filteredTasks = (tasks || []).filter((task) => {
-    const matchesSearch =
-      searchTerm.trim().length === 0 ||
-      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesLabels =
-      selectedLabels.length === 0 || selectedLabels.some((label) => task.labels.includes(label));
-
-    const matchesAssignees =
-      selectedAssigneeIds.length === 0 ||
-      task.assignees.some((a) => selectedAssigneeIds.includes(a.id));
-
-    return matchesSearch && matchesLabels && matchesAssignees;
-  });
+  const filteredTasks = filterTasks(tasks || [], { searchTerm, selectedLabels, selectedAssigneeIds });
 
   function toggleLabel(label: string) {
     setSelectedLabels((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
