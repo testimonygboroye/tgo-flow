@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getWorkspaceMembersRequest, inviteMemberRequest } from '../services/workspace.service';
+import { getWorkspaceMembersRequest, inviteMemberRequest, updateMemberRoleRequest, removeMemberRequest } from '../services/workspace.service';
 import { listActivityRequest } from '../services/activity.service';
 import { createBoardRequest, listBoardsRequest } from '../services/board.service';
 import { useAuthStore } from '../store/auth.store';
@@ -65,6 +65,19 @@ export function WorkspaceDetail() {
     } catch {
       setBoardError('Could not create board. Please try again.');
     }
+  }
+
+  async function handleRoleChange(userId: string, newRole: MembershipRole) {
+    if (!workspaceId) return;
+    await updateMemberRoleRequest(workspaceId, userId, newRole);
+    queryClient.invalidateQueries({ queryKey: ['members', workspaceId] });
+  }
+
+  async function handleRemoveMember(userId: string, name: string) {
+    if (!workspaceId) return;
+    if (!confirm(`Remove ${name} from this workspace?`)) return;
+    await removeMemberRequest(workspaceId, userId);
+    queryClient.invalidateQueries({ queryKey: ['members', workspaceId] });
   }
 
   async function handleInvite(e: FormEvent) {
@@ -277,20 +290,45 @@ export function WorkspaceDetail() {
               </div>
             ) : (
               <div className="overflow-hidden rounded-xl border border-border bg-surface">
-                {members?.map((m, i) => (
-                  <div
-                    key={m.membershipId}
-                    className={`flex items-center justify-between px-5 py-3.5 ${i !== 0 ? 'border-t border-border' : ''}`}
-                  >
-                    <div>
-                      <p className="font-medium text-text-primary">{m.user.name}</p>
-                      <p className="text-sm text-text-secondary">{m.user.email}</p>
+                {members?.map((m, i) => {
+                  const isSelf = m.user.id === user?.id;
+                  const canModifyThisMember = canManage && m.role !== 'owner' && !isSelf;
+
+                  return (
+                    <div
+                      key={m.membershipId}
+                      className={`flex items-center justify-between gap-3 px-5 py-3.5 ${i !== 0 ? 'border-t border-border' : ''}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-text-primary">{m.user.name}</p>
+                        <p className="text-sm text-text-secondary">{m.user.email}</p>
+                      </div>
+
+                      {canModifyThisMember ? (
+                        <div className="flex flex-shrink-0 items-center gap-2">
+                          <select
+                            value={m.role}
+                            onChange={(e) => handleRoleChange(m.user.id, e.target.value as MembershipRole)}
+                            className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-primary outline-none focus:border-brand-violet"
+                          >
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          <button
+                            onClick={() => handleRemoveMember(m.user.id, m.user.name)}
+                            className="rounded-lg px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="flex-shrink-0 rounded-full bg-surface-hover px-3 py-1 text-xs font-medium uppercase tracking-wide text-text-secondary">
+                          {m.role}
+                        </span>
+                      )}
                     </div>
-                    <span className="rounded-full bg-surface-hover px-3 py-1 text-xs font-medium uppercase tracking-wide text-text-secondary">
-                      {m.role}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

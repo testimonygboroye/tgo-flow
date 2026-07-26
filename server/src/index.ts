@@ -13,6 +13,7 @@ import workspaceRoutes from './routes/workspace.routes';
 import boardRoutes from './routes/board.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { initSocketServer } from './sockets';
+import { generalApiLimiter } from './middleware/rateLimiter';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -26,6 +27,8 @@ app.use(hpp());
 if (env.nodeEnv !== 'test') {
   app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 }
+
+app.use('/api', generalApiLimiter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', env: env.nodeEnv });

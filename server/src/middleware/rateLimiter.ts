@@ -23,3 +23,11 @@ export const inviteLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const generalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: { status: 'error', message: 'Too many requests. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

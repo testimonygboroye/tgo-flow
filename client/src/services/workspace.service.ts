@@ -25,3 +25,12 @@ export async function acceptInviteRequest(token: string): Promise<Workspace> {
   const { data } = await api.post('/workspaces/invites/accept', { token });
   return data.workspace;
 }
+
+export async function updateMemberRoleRequest(workspaceId: string, userId: string, role: MembershipRole) {
+  const { data } = await api.patch(`/workspaces/${workspaceId}/members/${userId}`, { role });
+  return data.membership;
+}
+
+export async function removeMemberRequest(workspaceId: string, userId: string) {
+  await api.delete(`/workspaces/${workspaceId}/members/${userId}`);
+}
