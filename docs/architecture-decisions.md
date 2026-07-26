@@ -19,3 +19,21 @@ field. This is intentional and required for local development on Termux.
   trade-off at this project's scale.
 - Do NOT remove this override without confirming Termux's native ARM
   binary support has been fixed upstream first.
+
+## ADR-002: NoSQL injection defense without express-mongo-sanitize
+
+**Context:** `express-mongo-sanitize` is incompatible with Express 5 — it
+attempts to overwrite `req.query`, which Express 5 made a read-only getter.
+This can silently fail to sanitize or throw unpredictably on requests with
+query strings.
+
+**Decision:** Do not use `express-mongo-sanitize`. Instead, rely on:
+- `express-validator` type-checking every route input (`.isEmail()`, etc.)
+  before it reaches any database query
+- Mongoose's own ObjectId casting, which rejects non-ID-shaped input for
+  any `_id`/reference field
+- HPP (`hpp` package) to prevent parameter-pollution-based bypass attempts
+
+**Consequences:** NoSQL operator injection (`$ne`, `$gt`, etc.) is blocked
+at the validation layer, not via request-object mutation — considered the
+more current, correct approach for Express 5 apps regardless.
