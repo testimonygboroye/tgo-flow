@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { protect } from '../middleware/auth';
 import { requireWorkspaceRole } from '../middleware/workspaceAccess';
+import { Board } from '../models/Board';
+import { AppError } from '../utils/AppError';
 import { validate } from '../middleware/validate';
 import * as boardController from '../controllers/board.controller';
 import taskRoutes from './task.routes';
@@ -10,6 +12,22 @@ const router = Router({ mergeParams: true });
 
 router.use(protect);
 router.use(requireWorkspaceRole('owner', 'admin', 'member'));
+
+// Ensures :boardId actually belongs to :workspaceId — without this, a valid
+// member of one workspace could act on a board belonging to a different
+// workspace entirely, just by knowing or guessing its ID.
+router.param('boardId', async (req, res, next, boardId) => {
+  try {
+    const board = await Board.findOne({ _id: boardId, workspace: req.params.workspaceId });
+    if (!board) {
+      next(new AppError('Board not found in this workspace', 404));
+      return;
+    }
+    next();
+  } catch {
+    next(new AppError('Board not found in this workspace', 404));
+  }
+});
 
 router.get('/', boardController.list);
 router.get('/:boardId', boardController.getOne);

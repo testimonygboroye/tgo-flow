@@ -130,4 +130,26 @@ describe('Workspace creation and permissions', () => {
 
     expect(res.status).toBe(200);
   });
+
+  it('prevents cross-tenant access to a board via a mismatched workspace ID in the URL', async () => {
+    // Create a second, completely separate workspace + board owned by the same owner
+    const otherWorkspaceRes = await request(app)
+      .post('/api/workspaces')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ name: 'A Different Workspace' });
+    const otherWorkspaceId = otherWorkspaceRes.body.workspace._id;
+
+    const otherBoardRes = await request(app)
+      .post(`/api/workspaces/${otherWorkspaceId}/boards`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ name: 'A Board In The Other Workspace' });
+    const otherBoardId = otherBoardRes.body.board._id;
+
+    // Attempt to access the OTHER workspace's board through THIS workspace's URL
+    const res = await request(app)
+      .get(`/api/workspaces/${workspaceId}/boards/${otherBoardId}`)
+      .set('Authorization', `Bearer ${ownerToken}`);
+
+    expect(res.status).toBe(404);
+  });
 });
