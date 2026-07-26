@@ -4,6 +4,7 @@ import { register, login, refresh, logout, me, forgotPassword, resetPasswordHand
 import { protect } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { authLimiter, forgotPasswordLimiter } from '../middleware/rateLimiter';
+import { requireCustomHeader } from '../middleware/requireCustomHeader';
 
 const router = Router();
 
@@ -34,8 +35,8 @@ router.post(
   login
 );
 
-router.post('/refresh', refresh);
-router.post('/logout', logout);
+router.post('/refresh', requireCustomHeader, refresh);
+router.post('/logout', requireCustomHeader, logout);
 router.get('/me', protect, me);
 
 router.post(
