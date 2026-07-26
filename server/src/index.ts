@@ -1,5 +1,6 @@
 import http from 'http';
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env';
@@ -13,6 +14,7 @@ import { initSocketServer } from './sockets';
 const app = express();
 const httpServer = http.createServer(app);
 
+app.use(helmet());
 app.use(cors({ origin: env.clientUrl, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
