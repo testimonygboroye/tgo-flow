@@ -1,0 +1,46 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm install --include=dev
+
+      - name: Run tests
+        working-directory: server
+        env:
+          NODE_ENV: test
+          PORT: 5001
+          MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          JWT_ACCESS_EXPIRES: 15m
+          JWT_REFRESH_EXPIRES: 7d
+          CLIENT_URL: http://localhost:5173
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          SENDER_EMAIL: testimonygboroye.dev@gmail.com
+          SENDER_NAME: TGO Flow
+        run: npm test
+
+      - name: Build check
+        working-directory: server
+        run: npm run build
