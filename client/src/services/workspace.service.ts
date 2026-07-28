@@ -40,3 +40,20 @@ export async function getWorkspaceRequest(workspaceId: string) {
   return data.workspace;
 }
 
+
+export async function updateWorkspaceNameRequest(workspaceId: string, name: string) {
+  const { data } = await api.patch(`/workspaces/${workspaceId}`, { name });
+  return data.workspace;
+}
+
+export async function deleteWorkspaceRequest(workspaceId: string) {
+  await api.delete(`/workspaces/${workspaceId}`);
+}
+
+export async function leaveWorkspaceRequest(workspaceId: string) {
+  await api.post(`/workspaces/${workspaceId}/leave`);
+}
+
+export async function declineInviteRequest(token: string) {
+  await api.post('/workspaces/invites/decline', { token });
+}

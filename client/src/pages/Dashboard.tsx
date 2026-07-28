@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listWorkspacesRequest, createWorkspaceRequest } from '../services/workspace.service';
@@ -142,9 +143,12 @@ export function Dashboard() {
                 <h3 className="font-display font-semibold text-text-primary group-hover:text-brand-violet transition">
                   {workspace.name}
                 </h3>
-                <span className="mt-1 inline-block text-xs uppercase tracking-wide text-text-secondary">
-                  {role}
-                </span>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-xs uppercase tracking-wide text-text-secondary">{role}</span>
+                  <span className="text-xs text-text-secondary" title={new Date(workspace.createdAt).toLocaleString()}>
+                    · {formatDistanceToNow(new Date(workspace.createdAt), { addSuffix: true })}
+                  </span>
+                </div>
               </button>
             ))}
           </div>

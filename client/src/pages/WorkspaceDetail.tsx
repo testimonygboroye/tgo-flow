@@ -2,7 +2,16 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getWorkspaceMembersRequest, inviteMemberRequest, updateMemberRoleRequest, removeMemberRequest, getWorkspaceRequest } from '../services/workspace.service';
+import {
+  getWorkspaceMembersRequest,
+  inviteMemberRequest,
+  updateMemberRoleRequest,
+  removeMemberRequest,
+  getWorkspaceRequest,
+  updateWorkspaceNameRequest,
+  deleteWorkspaceRequest,
+  leaveWorkspaceRequest,
+} from '../services/workspace.service';
 import { listActivityRequest } from '../services/activity.service';
 import { createBoardRequest, listBoardsRequest } from '../services/board.service';
 import { useAuthStore } from '../store/auth.store';
@@ -20,6 +29,8 @@ export function WorkspaceDetail() {
   const { user } = useAuthStore();
   const [tab, setTab] = useState<Tab>('boards');
   const [memberActionError, setMemberActionError] = useState<string | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
 
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
@@ -105,6 +116,30 @@ export function WorkspaceDetail() {
     }
   }
 
+  async function handleSaveWorkspaceName() {
+    if (!workspaceId || !editedName.trim()) {
+      setIsEditingName(false);
+      return;
+    }
+    await updateWorkspaceNameRequest(workspaceId, editedName.trim());
+    queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
+    setIsEditingName(false);
+  }
+
+  async function handleDeleteWorkspace() {
+    if (!workspaceId || !workspace) return;
+    if (!confirm(`Delete "${workspace.name}"? This will permanently delete all its boards and tasks. This cannot be undone.`)) return;
+    await deleteWorkspaceRequest(workspaceId);
+    navigate('/dashboard');
+  }
+
+  async function handleLeaveWorkspace() {
+    if (!workspaceId || !workspace) return;
+    if (!confirm(`Leave "${workspace.name}"? You will need a new invite to rejoin.`)) return;
+    await leaveWorkspaceRequest(workspaceId);
+    navigate('/dashboard');
+  }
+
   async function handleInvite(e: FormEvent) {
     e.preventDefault();
     if (!inviteEmail.trim() || !workspaceId) return;
@@ -139,7 +174,55 @@ export function WorkspaceDetail() {
 
       <main className="mx-auto max-w-5xl px-6 py-10">
         {workspace && (
-          <h1 className="mb-6 font-display text-2xl font-bold text-text-primary">{workspace.name}</h1>
+          <div className="mb-6 flex items-center justify-between gap-3">
+            {isEditingName ? (
+              <div className="flex flex-1 items-center gap-2">
+                <input
+                  autoFocus
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveWorkspaceName()}
+                  className="flex-1 rounded-lg border border-border bg-bg px-3 py-1.5 font-display text-xl font-bold text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                />
+                <button onClick={handleSaveWorkspaceName} className="rounded-lg bg-brand-gradient px-3 py-1.5 text-sm font-medium text-white">
+                  Save
+                </button>
+                <button onClick={() => setIsEditingName(false)} className="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-hover">
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <>
+                <h1 className="font-display text-2xl font-bold text-text-primary">{workspace.name}</h1>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  {canManage && (
+                    <button
+                      onClick={() => { setEditedName(workspace.name); setIsEditingName(true); }}
+                      className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
+                    >
+                      Rename
+                    </button>
+                  )}
+                  {myRole === 'owner' && (
+                    <button
+                      onClick={handleDeleteWorkspace}
+                      className="rounded-lg border border-danger/30 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  {myRole && myRole !== 'owner' && (
+                    <button
+                      onClick={handleLeaveWorkspace}
+                      className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface-hover"
+                    >
+                      Leave
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         )}
 
         {memberActionError && (

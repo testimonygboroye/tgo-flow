@@ -20,3 +20,12 @@ export async function createListRequest(workspaceId: string, boardId: string, na
   const { data } = await api.post(`/workspaces/${workspaceId}/boards/${boardId}/lists`, { name });
   return data.list;
 }
+
+export async function updateBoardNameRequest(workspaceId: string, boardId: string, name: string) {
+  const { data } = await api.patch(`/workspaces/${workspaceId}/boards/${boardId}`, { name });
+  return data.board;
+}
+
+export async function deleteBoardRequest(workspaceId: string, boardId: string) {
+  await api.delete(`/workspaces/${workspaceId}/boards/${boardId}`);
+}
