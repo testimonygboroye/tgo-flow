@@ -13,21 +13,23 @@ import { TaskDetailModal } from '../components/TaskDetailModal';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useAuthStore } from '../store/auth.store';
-import type { Task } from '../types';
 import { filterTasks } from '../utils/taskFilters';
+import type { Task } from '../types';
 
 export function BoardPage() {
   const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAddingList, setIsAddingList] = useState(false);
-  const [isEditingBoardName, setIsEditingBoardName] = useState(false);
-  const [editedBoardName, setEditedBoardName] = useState('');
+  const [newListName, setNewListName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
-  const [newListName, setNewListName] = useState('');
+  const [isEditingBoardName, setIsEditingBoardName] = useState(false);
+  const [editedBoardName, setEditedBoardName] = useState('');
 
   useBoardSocket(boardId, workspaceId);
 
@@ -43,18 +45,44 @@ export function BoardPage() {
     enabled: !!workspaceId && !!boardId,
   });
 
-  const { user } = useAuthStore();
-
   const { data: members } = useQuery({
     queryKey: ['members', workspaceId],
     queryFn: () => getWorkspaceMembersRequest(workspaceId!),
     enabled: !!workspaceId,
   });
 
+  const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
+  const canManage = myMembership?.role === 'owner' || myMembership?.role === 'admin';
+
+  const filteredTasks = filterTasks(tasks || [], { searchTerm, selectedLabels, selectedAssigneeIds });
+
+  function toggleLabel(label: string) {
+    setSelectedLabels((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
+  }
+
+  function toggleAssignee(userId: string) {
+    setSelectedAssigneeIds((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]));
+  }
+
+  function clearFilters() {
+    setSearchTerm('');
+    setSelectedLabels([]);
+    setSelectedAssigneeIds([]);
+  }
+
   async function handleAddTask(listId: string, title: string) {
     if (!workspaceId || !boardId) return;
     const task = await createTaskRequest(workspaceId, boardId, listId, { title });
     queryClient.setQueryData<Task[]>(['tasks', workspaceId, boardId], (old) => (old ? [...old, task] : [task]));
+  }
+
+  async function handleAddList(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newListName.trim() || !workspaceId || !boardId) return;
+    await createListRequest(workspaceId, boardId, newListName.trim());
+    setNewListName('');
+    setIsAddingList(false);
+    queryClient.invalidateQueries({ queryKey: ['board', workspaceId, boardId] });
   }
 
   async function handleSaveBoardName() {
@@ -72,15 +100,6 @@ export function BoardPage() {
     if (!confirm(`Delete "${boardData.board.name}"? All its tasks will be permanently deleted. This cannot be undone.`)) return;
     await deleteBoardRequest(workspaceId, boardId);
     navigate(`/workspaces/${workspaceId}`);
-  }
-
-  async function handleAddList(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newListName.trim() || !workspaceId || !boardId) return;
-    await createListRequest(workspaceId, boardId, newListName.trim());
-    setNewListName('');
-    setIsAddingList(false);
-    queryClient.invalidateQueries({ queryKey: ['board', workspaceId, boardId] });
   }
 
   async function handleDragEnd(result: DropResult) {
@@ -104,25 +123,6 @@ export function BoardPage() {
       queryClient.setQueryData(tasksKey, previousTasks);
     }
   }
-
-  const filteredTasks = filterTasks(tasks || [], { searchTerm, selectedLabels, selectedAssigneeIds });
-
-  function toggleLabel(label: string) {
-    setSelectedLabels((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
-  }
-
-  function toggleAssignee(userId: string) {
-    setSelectedAssigneeIds((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]));
-  }
-
-  function clearFilters() {
-    setSearchTerm('');
-    setSelectedLabels([]);
-    setSelectedAssigneeIds([]);
-  }
-
-  const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
-  const canManage = myMembership?.role === 'owner' || myMembership?.role === 'admin';
 
   if (boardLoading || !boardData) {
     return (
@@ -211,28 +211,28 @@ export function BoardPage() {
           ))}
 
           {canManage && (
-          <div className="w-72 flex-shrink-0">
-            {isAddingList ? (
-              <form onSubmit={handleAddList} className="rounded-xl border border-border bg-surface p-3">
-                <input
-                  autoFocus
-                  type="text"
-                  value={newListName}
-                  onChange={(e) => setNewListName(e.target.value)}
-                  onBlur={() => !newListName.trim() && setIsAddingList(false)}
-                  placeholder="List name..."
-                  className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
-                />
-              </form>
-            ) : (
-              <button
-                onClick={() => setIsAddingList(true)}
-                className="w-full rounded-xl border border-dashed border-border bg-surface/40 px-4 py-3 text-sm text-text-secondary transition hover:bg-surface-hover hover:text-text-primary"
-              >
-                + Add list
-              </button>
-            )}
-          </div>
+            <div className="w-72 flex-shrink-0">
+              {isAddingList ? (
+                <form onSubmit={handleAddList} className="rounded-xl border border-border bg-surface p-3">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={newListName}
+                    onChange={(e) => setNewListName(e.target.value)}
+                    onBlur={() => !newListName.trim() && setIsAddingList(false)}
+                    placeholder="List name..."
+                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                  />
+                </form>
+              ) : (
+                <button
+                  onClick={() => setIsAddingList(true)}
+                  className="w-full rounded-xl border border-dashed border-border bg-surface/40 px-4 py-3 text-sm text-text-secondary transition hover:bg-surface-hover hover:text-text-primary"
+                >
+                  + Add list
+                </button>
+              )}
+            </div>
           )}
         </div>
       </DragDropContext>
