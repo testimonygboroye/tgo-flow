@@ -5,10 +5,11 @@ import type { Task } from '../types';
 interface TaskCardProps {
   task: Task;
   index: number;
+  priorityNumber: number;
   onClick: () => void;
 }
 
-export function TaskCard({ task, index, onClick }: TaskCardProps) {
+export function TaskCard({ task, index, priorityNumber, onClick }: TaskCardProps) {
   const overdue = task.dueDate && isPast(new Date(task.dueDate));
 
   return (
@@ -23,6 +24,12 @@ export function TaskCard({ task, index, onClick }: TaskCardProps) {
             snapshot.isDragging ? 'shadow-lg shadow-brand-violet/10 rotate-1' : 'hover:border-brand-violet/40'
           }`}
         >
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-surface-hover text-[10px] font-bold text-text-secondary">
+              {priorityNumber}
+            </span>
+          </div>
+
           {task.labels.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {task.labels.map((label) => (

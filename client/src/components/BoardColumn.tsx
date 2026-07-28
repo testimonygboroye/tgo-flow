@@ -43,7 +43,13 @@ export function BoardColumn({ list, tasks, onTaskClick, onAddTask }: BoardColumn
             style={{ minHeight: '60px' }}
           >
             {tasks.map((task, index) => (
-              <TaskCard key={task._id} task={task} index={index} onClick={() => onTaskClick(task)} />
+              <TaskCard
+                key={task._id}
+                task={task}
+                index={index}
+                priorityNumber={index + 1}
+                onClick={() => onTaskClick(task)}
+              />
             ))}
             {provided.placeholder}
           </div>
