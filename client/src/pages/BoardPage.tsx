@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
-import { getBoardRequest, createListRequest } from '../services/board.service';
+import { getBoardRequest, createListRequest, updateBoardNameRequest, deleteBoardRequest } from '../services/board.service';
 import { listTasksRequest, createTaskRequest, moveTaskRequest } from '../services/task.service';
 import { getWorkspaceMembersRequest } from '../services/workspace.service';
 import { useBoardSocket } from '../hooks/useBoardSocket';
@@ -18,9 +18,12 @@ import { filterTasks } from '../utils/taskFilters';
 
 export function BoardPage() {
   const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAddingList, setIsAddingList] = useState(false);
+  const [isEditingBoardName, setIsEditingBoardName] = useState(false);
+  const [editedBoardName, setEditedBoardName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
@@ -52,6 +55,23 @@ export function BoardPage() {
     if (!workspaceId || !boardId) return;
     const task = await createTaskRequest(workspaceId, boardId, listId, { title });
     queryClient.setQueryData<Task[]>(['tasks', workspaceId, boardId], (old) => (old ? [...old, task] : [task]));
+  }
+
+  async function handleSaveBoardName() {
+    if (!workspaceId || !boardId || !editedBoardName.trim()) {
+      setIsEditingBoardName(false);
+      return;
+    }
+    await updateBoardNameRequest(workspaceId, boardId, editedBoardName.trim());
+    queryClient.invalidateQueries({ queryKey: ['board', workspaceId, boardId] });
+    setIsEditingBoardName(false);
+  }
+
+  async function handleDeleteBoard() {
+    if (!workspaceId || !boardId || !boardData) return;
+    if (!confirm(`Delete "${boardData.board.name}"? All its tasks will be permanently deleted. This cannot be undone.`)) return;
+    await deleteBoardRequest(workspaceId, boardId);
+    navigate(`/workspaces/${workspaceId}`);
   }
 
   async function handleAddList(e: React.FormEvent) {
@@ -124,9 +144,45 @@ export function BoardPage() {
               <Logo className="h-7 w-7" />
             </Link>
             <span className="text-text-secondary">/</span>
-            <h1 className="font-display text-lg font-bold text-text-primary">{board.name}</h1>
+            {isEditingBoardName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={editedBoardName}
+                  onChange={(e) => setEditedBoardName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveBoardName()}
+                  className="rounded-lg border border-border bg-bg px-2.5 py-1 text-lg font-bold text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                />
+                <button onClick={handleSaveBoardName} className="rounded-lg bg-brand-gradient px-2.5 py-1 text-xs font-medium text-white">
+                  Save
+                </button>
+                <button onClick={() => setIsEditingBoardName(false)} className="rounded-lg px-2.5 py-1 text-xs text-text-secondary hover:bg-surface-hover">
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <h1 className="font-display text-lg font-bold text-text-primary">{board.name}</h1>
+            )}
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            {canManage && !isEditingBoardName && (
+              <>
+                <button
+                  onClick={() => { setEditedBoardName(board.name); setIsEditingBoardName(true); }}
+                  className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-text-primary hover:bg-surface-hover"
+                >
+                  Rename
+                </button>
+                <button
+                  onClick={handleDeleteBoard}
+                  className="rounded-lg border border-danger/30 px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger/10"
+                >
+                  Delete
+                </button>
+              </>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
