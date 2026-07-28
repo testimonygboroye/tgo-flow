@@ -70,6 +70,25 @@ export function BoardPage() {
     setSelectedAssigneeIds([]);
   }
 
+  async function handleMoveTask(taskId: string, targetListId: string) {
+    if (!workspaceId || !boardId) return;
+    const tasksInTargetList = (tasks || []).filter((t) => t.list === targetListId);
+    const newPosition = tasksInTargetList.length;
+
+    const tasksKey = ['tasks', workspaceId, boardId];
+    const previousTasks = queryClient.getQueryData<Task[]>(tasksKey);
+
+    queryClient.setQueryData<Task[]>(tasksKey, (old) =>
+      old ? old.map((t) => (t._id === taskId ? { ...t, list: targetListId, position: newPosition } : t)) : old
+    );
+
+    try {
+      await moveTaskRequest(workspaceId, boardId, taskId, targetListId, newPosition);
+    } catch {
+      queryClient.setQueryData(tasksKey, previousTasks);
+    }
+  }
+
   async function handleAddTask(listId: string, title: string) {
     if (!workspaceId || !boardId) return;
     const task = await createTaskRequest(workspaceId, boardId, listId, { title });
@@ -204,9 +223,11 @@ export function BoardPage() {
             <BoardColumn
               key={list._id}
               list={list}
+              allLists={sortedLists}
               tasks={filteredTasks.filter((t) => t.list === list._id).sort((a, b) => a.position - b.position)}
               onTaskClick={setSelectedTask}
               onAddTask={handleAddTask}
+              onMoveTask={handleMoveTask}
             />
           ))}
 

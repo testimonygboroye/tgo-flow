@@ -7,11 +7,13 @@ import type { List, Task } from '../types';
 interface BoardColumnProps {
   list: List;
   tasks: Task[];
+  allLists: List[];
   onTaskClick: (task: Task) => void;
   onAddTask: (listId: string, title: string) => void;
+  onMoveTask: (taskId: string, targetListId: string) => void;
 }
 
-export function BoardColumn({ list, tasks, onTaskClick, onAddTask }: BoardColumnProps) {
+export function BoardColumn({ list, tasks, allLists, onTaskClick, onAddTask, onMoveTask }: BoardColumnProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
 
@@ -49,6 +51,8 @@ export function BoardColumn({ list, tasks, onTaskClick, onAddTask }: BoardColumn
                 index={index}
                 priorityNumber={index + 1}
                 onClick={() => onTaskClick(task)}
+                otherLists={allLists.filter((l) => l._id !== list._id).sort((a, b) => a.position - b.position)}
+                onMoveTo={(targetListId) => onMoveTask(task._id, targetListId)}
               />
             ))}
             {provided.placeholder}
