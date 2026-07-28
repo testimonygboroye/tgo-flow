@@ -47,17 +47,20 @@ export function TaskCard({ task, index, onClick }: TaskCardProps) {
               <span />
             )}
 
-            {task.assignees.length > 0 && (
+            {Array.isArray(task.assignees) && task.assignees.length > 0 && (
               <div className="flex -space-x-1.5">
-                {task.assignees.slice(0, 3).map((assignee) => (
-                  <div
-                    key={assignee.id}
-                    title={assignee.name}
-                    className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gradient text-[10px] font-semibold text-white ring-2 ring-surface"
-                  >
-                    {assignee.name.charAt(0).toUpperCase()}
-                  </div>
-                ))}
+                {task.assignees
+                  .filter((assignee) => assignee && typeof assignee === 'object' && assignee.name)
+                  .slice(0, 3)
+                  .map((assignee) => (
+                    <div
+                      key={assignee.id}
+                      title={assignee.name}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gradient text-[10px] font-semibold text-white ring-2 ring-surface"
+                    >
+                      {assignee.name.charAt(0).toUpperCase()}
+                    </div>
+                  ))}
               </div>
             )}
           </div>

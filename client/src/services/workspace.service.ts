@@ -34,3 +34,9 @@ export async function updateMemberRoleRequest(workspaceId: string, userId: strin
 export async function removeMemberRequest(workspaceId: string, userId: string) {
   await api.delete(`/workspaces/${workspaceId}/members/${userId}`);
 }
+
+export async function getWorkspaceRequest(workspaceId: string) {
+  const { data } = await api.get(`/workspaces/${workspaceId}`);
+  return data.workspace;
+}
+

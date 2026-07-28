@@ -13,6 +13,7 @@ export function ResetPassword() {
   const token = searchParams.get('token');
 
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -23,6 +24,11 @@ export function ResetPassword() {
 
     if (!token) {
       setError('This reset link is invalid or missing a token.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
@@ -74,6 +80,16 @@ export function ResetPassword() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 8 characters, with a number"
+                />
+
+                <PasswordInput
+                  id="confirmPassword"
+                  label="Confirm new password"
+                  required
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your new password"
                 />
 
                 {error && (

@@ -52,6 +52,12 @@ export async function createTask(input: CreateTaskInput) {
     createdBy: input.createdBy,
   });
 
+  await task.populate('assignees', 'name email');
+  await task.populate('createdBy', 'name email');
+  await task.populate('assignees', 'name email');
+  await task.populate('createdBy', 'name email');
+  await task.populate('assignees', 'name email');
+  await task.populate('createdBy', 'name email');
   emitToBoard(input.boardId, 'task:created', task);
 
   if (board) {
@@ -105,6 +111,8 @@ export async function updateTask(taskId: string, boardId: string, updates: Updat
   }
 
   await task.save();
+  await task.populate('assignees', 'name email');
+  await task.populate('createdBy', 'name email');
   emitToBoard(boardId, 'task:updated', task);
   return task;
 }
@@ -123,6 +131,8 @@ export async function moveTask(taskId: string, boardId: string, newListId: strin
   task.list = targetList._id;
   task.position = newPosition;
   await task.save();
+  await task.populate('assignees', 'name email');
+  await task.populate('createdBy', 'name email');
   emitToBoard(boardId, 'task:moved', task);
   return task;
 }

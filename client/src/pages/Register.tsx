@@ -14,12 +14,19 @@ export function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await registerRequest(name, email, password);
@@ -91,6 +98,16 @@ export function Register() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters, with a number"
+            />
+
+            <PasswordInput
+              id="confirmPassword"
+              label="Confirm password"
+              required
+              minLength={8}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter your password"
             />
 
             {error && (

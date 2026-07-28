@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getWorkspaceMembersRequest, inviteMemberRequest, updateMemberRoleRequest, removeMemberRequest } from '../services/workspace.service';
+import { getWorkspaceMembersRequest, inviteMemberRequest, updateMemberRoleRequest, removeMemberRequest, getWorkspaceRequest } from '../services/workspace.service';
 import { listActivityRequest } from '../services/activity.service';
 import { createBoardRequest, listBoardsRequest } from '../services/board.service';
 import { useAuthStore } from '../store/auth.store';
@@ -19,6 +19,7 @@ export function WorkspaceDetail() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [tab, setTab] = useState<Tab>('boards');
+  const [memberActionError, setMemberActionError] = useState<string | null>(null);
 
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
@@ -33,6 +34,12 @@ export function WorkspaceDetail() {
   const { data: boards, isLoading: boardsLoading } = useQuery({
     queryKey: ['boards', workspaceId],
     queryFn: () => listBoardsRequest(workspaceId!),
+    enabled: !!workspaceId,
+  });
+
+  const { data: workspace } = useQuery({
+    queryKey: ['workspace', workspaceId],
+    queryFn: () => getWorkspaceRequest(workspaceId!),
     enabled: !!workspaceId,
   });
 
@@ -69,15 +76,33 @@ export function WorkspaceDetail() {
 
   async function handleRoleChange(userId: string, newRole: MembershipRole) {
     if (!workspaceId) return;
-    await updateMemberRoleRequest(workspaceId, userId, newRole);
-    queryClient.invalidateQueries({ queryKey: ['members', workspaceId] });
+    setMemberActionError(null);
+    try {
+      await updateMemberRoleRequest(workspaceId, userId, newRole);
+      queryClient.invalidateQueries({ queryKey: ['members', workspaceId] });
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        setMemberActionError(err.response.data.message);
+      } else {
+        setMemberActionError('Could not update this member\'s role. Please try again.');
+      }
+    }
   }
 
   async function handleRemoveMember(userId: string, name: string) {
     if (!workspaceId) return;
     if (!confirm(`Remove ${name} from this workspace?`)) return;
-    await removeMemberRequest(workspaceId, userId);
-    queryClient.invalidateQueries({ queryKey: ['members', workspaceId] });
+    setMemberActionError(null);
+    try {
+      await removeMemberRequest(workspaceId, userId);
+      queryClient.invalidateQueries({ queryKey: ['members', workspaceId] });
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        setMemberActionError(err.response.data.message);
+      } else {
+        setMemberActionError('Could not remove this member. Please try again.');
+      }
+    }
   }
 
   async function handleInvite(e: FormEvent) {
@@ -113,6 +138,16 @@ export function WorkspaceDetail() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-10">
+        {workspace && (
+          <h1 className="mb-6 font-display text-2xl font-bold text-text-primary">{workspace.name}</h1>
+        )}
+
+        {memberActionError && (
+          <div className="mb-4 rounded-lg bg-danger/10 border border-danger/20 px-4 py-2.5 text-sm text-danger">
+            {memberActionError}
+          </div>
+        )}
+
         <div className="mb-6 flex gap-1 border-b border-border">
           <button
             onClick={() => setTab('boards')}
@@ -275,10 +310,7 @@ export function WorkspaceDetail() {
 
                 {inviteLink && (
                   <div className="mt-3 rounded-lg bg-success/10 border border-success/20 px-3.5 py-2.5 text-sm text-text-primary">
-                    Invite created. Share this link with them to join:
-                    <div className="mt-1.5 break-all rounded bg-bg px-2.5 py-1.5 font-mono text-xs text-brand-violet">
-                      {inviteLink}
-                    </div>
+                    ✓ Invite sent successfully! They'll receive an email with instructions to join.
                   </div>
                 )}
               </form>

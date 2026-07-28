@@ -40,6 +40,7 @@ export function Dashboard() {
   }
 
   async function handleLogout() {
+    if (!confirm('Are you sure you want to log out?')) return;
     await logoutRequest().catch(() => {});
     clearAuth();
     navigate('/login');
