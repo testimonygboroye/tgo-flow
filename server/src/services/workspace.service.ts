@@ -4,13 +4,18 @@ import { Workspace } from '../models/Workspace';
 import { Membership, MembershipRole } from '../models/Membership';
 import { Invite } from '../models/Invite';
 import { User } from '../models/User';
+import { Board } from '../models/Board';
+import { List } from '../models/List';
+import { Task } from '../models/Task';
+import { Comment } from '../models/Comment';
+import { Activity } from '../models/Activity';
 import { AppError } from '../utils/AppError';
 import { sha256 } from '../utils/hash';
 import { sendInviteEmail } from './email.service';
 import { env } from '../config/env';
 import { logActivity } from './activity.service';
 
-const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function createWorkspace(userId: string, name: string) {
   const workspace = await Workspace.create({ name, owner: new Types.ObjectId(userId) });
@@ -159,7 +164,7 @@ export async function updateMemberRole(
   }
 
   if (requesterRole !== 'owner' && membership.role === 'admin') {
-    throw new AppError('Only the workspace owner can change an admin\'s role', 403);
+    throw new AppError("Only the workspace owner can change an admin's role", 403);
   }
 
   membership.role = newRole;
@@ -188,4 +193,61 @@ export async function removeMember(workspaceId: string, targetUserId: string, re
   const targetUser = await User.findById(targetUserId);
   await Membership.deleteOne({ _id: membership._id });
   await logActivity(workspaceId, targetUserId, 'member_removed', targetUser?.name || 'a member');
+}
+
+export async function updateWorkspaceName(workspaceId: string, name: string) {
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+  workspace.name = name;
+  await workspace.save();
+  return workspace;
+}
+
+export async function deleteWorkspace(workspaceId: string, requesterId: string) {
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+  if (workspace.owner.toString() !== requesterId) {
+    throw new AppError('Only the workspace owner can delete this workspace', 403);
+  }
+
+  const boards = await Board.find({ workspace: workspaceId });
+  const boardIds = boards.map((b) => b._id);
+  const lists = await List.find({ board: { $in: boardIds } });
+  const listIds = lists.map((l) => l._id);
+  const tasks = await Task.find({ list: { $in: listIds } });
+  const taskIds = tasks.map((t) => t._id);
+
+  await Comment.deleteMany({ task: { $in: taskIds } });
+  await Task.deleteMany({ list: { $in: listIds } });
+  await List.deleteMany({ board: { $in: boardIds } });
+  await Board.deleteMany({ workspace: workspaceId });
+  await Membership.deleteMany({ workspace: workspaceId });
+  await Invite.deleteMany({ workspace: workspaceId });
+  await Activity.deleteMany({ workspace: workspaceId });
+  await Workspace.deleteOne({ _id: workspaceId });
+}
+
+export async function leaveWorkspace(workspaceId: string, userId: string) {
+  const membership = await Membership.findOne({ workspace: workspaceId, user: userId });
+  if (!membership) {
+    throw new AppError('You are not a member of this workspace', 404);
+  }
+  if (membership.role === 'owner') {
+    throw new AppError('The owner cannot leave. Delete the workspace instead, or transfer ownership first.', 403);
+  }
+  await Membership.deleteOne({ _id: membership._id });
+}
+
+export async function declineInvite(rawToken: string) {
+  const tokenHash = sha256(rawToken);
+  const invite = await Invite.findOne({ tokenHash, status: 'pending' });
+  if (!invite) {
+    throw new AppError('Invalid or expired invite', 400);
+  }
+  invite.status = 'revoked';
+  await invite.save();
 }

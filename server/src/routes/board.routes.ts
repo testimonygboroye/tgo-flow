@@ -42,6 +42,22 @@ router.post(
   boardController.create
 );
 
+router.patch(
+  '/:boardId',
+  requireWorkspaceRole('owner', 'admin'),
+  [body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Board name is required (max 100 characters)')],
+  validate,
+  boardController.update
+);
+
+router.patch(
+  '/:boardId',
+  requireWorkspaceRole('owner', 'admin'),
+  [body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Board name is required (max 100 characters)')],
+  validate,
+  boardController.update
+);
+
 router.delete('/:boardId', requireWorkspaceRole('owner', 'admin'), boardController.remove);
 
 router.post(

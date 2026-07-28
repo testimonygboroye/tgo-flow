@@ -30,6 +30,16 @@ export async function getOne(req: Request, res: Response, next: NextFunction): P
   }
 }
 
+export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { name } = req.body;
+    const board = await boardService.updateBoardName(getParam(req, 'boardId'), getParam(req, 'workspaceId'), name);
+    res.status(200).json({ status: 'success', board });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     await boardService.deleteBoard(getParam(req, 'boardId'), getParam(req, 'workspaceId'));

@@ -34,6 +34,16 @@ export async function getBoardWithLists(boardId: string, workspaceId: string) {
   return { board, lists };
 }
 
+export async function updateBoardName(boardId: string, workspaceId: string, name: string) {
+  const board = await Board.findOne({ _id: boardId, workspace: workspaceId });
+  if (!board) {
+    throw new AppError('Board not found', 404);
+  }
+  board.name = name;
+  await board.save();
+  return board;
+}
+
 export async function deleteBoard(boardId: string, workspaceId: string) {
   const board = await Board.findOne({ _id: boardId, workspace: workspaceId });
   if (!board) {

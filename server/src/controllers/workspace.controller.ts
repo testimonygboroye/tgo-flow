@@ -91,3 +91,41 @@ export async function removeMember(req: Request, res: Response, next: NextFuncti
     next(err);
   }
 }
+
+export async function updateName(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { name } = req.body;
+    const workspace = await workspaceService.updateWorkspaceName(getParam(req, 'id'), name);
+    res.status(200).json({ status: 'success', workspace });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await workspaceService.deleteWorkspace(getParam(req, 'id'), req.userId as string);
+    res.status(200).json({ status: 'success', message: 'Workspace deleted' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function leave(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await workspaceService.leaveWorkspace(getParam(req, 'id'), req.userId as string);
+    res.status(200).json({ status: 'success', message: 'You have left the workspace' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function declineInvite(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { token } = req.body;
+    await workspaceService.declineInvite(token);
+    res.status(200).json({ status: 'success', message: 'Invite declined' });
+  } catch (err) {
+    next(err);
+  }
+}
