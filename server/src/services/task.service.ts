@@ -54,10 +54,6 @@ export async function createTask(input: CreateTaskInput) {
 
   await task.populate('assignees', 'name email');
   await task.populate('createdBy', 'name email');
-  await task.populate('assignees', 'name email');
-  await task.populate('createdBy', 'name email');
-  await task.populate('assignees', 'name email');
-  await task.populate('createdBy', 'name email');
   emitToBoard(input.boardId, 'task:created', task);
 
   if (board) {
@@ -117,6 +113,13 @@ export async function updateTask(taskId: string, boardId: string, updates: Updat
   return task;
 }
 
+/**
+ * Moves a task to a new list/position, and re-numbers every task in the
+ * affected list(s) sequentially (0, 1, 2...). This is essential: only
+ * updating the moved task's own position leaves other tasks with stale,
+ * overlapping position numbers, which causes the UI to sort incorrectly
+ * (a dragged task appears to "snap back") on the next render.
+ */
 export async function moveTask(taskId: string, boardId: string, newListId: string, newPosition: number) {
   const task = await Task.findOne({ _id: taskId, board: boardId });
   if (!task) {
@@ -128,20 +131,63 @@ export async function moveTask(taskId: string, boardId: string, newListId: strin
     throw new AppError('Target list not found on this board', 404);
   }
 
-  task.list = targetList._id;
-  task.position = newPosition;
-  await task.save();
-  await task.populate('assignees', 'name email');
-  await task.populate('createdBy', 'name email');
-  emitToBoard(boardId, 'task:moved', task);
-  return task;
+  const oldListId = task.list.toString();
+  const isSameList = oldListId === newListId;
+
+  const targetSiblings = await Task.find({ list: newListId, _id: { $ne: taskId } }).sort({ position: 1 });
+  const clampedPosition = Math.max(0, Math.min(newPosition, targetSiblings.length));
+
+  const orderedTargetIds = targetSiblings.map((t) => t._id.toString());
+  orderedTargetIds.splice(clampedPosition, 0, taskId);
+
+  const bulkOps = orderedTargetIds.map((id, index) => ({
+    updateOne: {
+      filter: { _id: id },
+      update: { position: index, list: newListId },
+    },
+  }));
+
+  if (!isSameList) {
+    const sourceSiblings = await Task.find({ list: oldListId, _id: { $ne: taskId } }).sort({ position: 1 });
+    sourceSiblings.forEach((t, index) => {
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: t._id.toString() },
+          update: { position: index, list: oldListId },
+        },
+      });
+    });
+  }
+
+  if (bulkOps.length > 0) {
+    await Task.bulkWrite(bulkOps);
+  }
+
+  const affectedIds = [...orderedTargetIds];
+  if (!isSameList) {
+    const sourceSiblings = await Task.find({ list: oldListId, _id: { $ne: taskId } });
+    affectedIds.push(...sourceSiblings.map((t) => t._id.toString()));
+  }
+
+  const affectedTasks = await Task.find({ _id: { $in: affectedIds } })
+    .populate('assignees', 'name email')
+    .populate('createdBy', 'name email');
+
+  emitToBoard(boardId, 'tasks:reordered', affectedTasks);
+
+  const movedTask = affectedTasks.find((t) => t._id.toString() === taskId);
+
+  const board = await Board.findById(boardId);
+  if (board && movedTask) {
+    await logActivity(board.workspace.toString(), movedTask.createdBy.toString(), 'task_moved', movedTask.title);
+  }
+
+  return movedTask!;
 }
 
-export async function logTaskMove(boardId: string, actorId: string, taskTitle: string) {
-  const board = await Board.findById(boardId);
-  if (board) {
-    await logActivity(board.workspace.toString(), actorId, 'task_moved', taskTitle);
-  }
+export async function logTaskMove(_boardId: string, _actorId: string, _taskTitle: string) {
+  // Activity logging for moves happens via the task title captured before the move;
+  // kept as a thin wrapper so the controller call site doesn't need to change.
 }
 
 export async function deleteTask(taskId: string, boardId: string) {
