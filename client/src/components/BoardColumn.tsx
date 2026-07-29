@@ -8,12 +8,13 @@ interface BoardColumnProps {
   list: List;
   tasks: Task[];
   allLists: List[];
+  allTasks: Task[];
   onTaskClick: (task: Task) => void;
   onAddTask: (listId: string, title: string) => void;
-  onMoveTask: (taskId: string, targetListId: string) => void;
+  onMoveTask: (taskId: string, targetListId: string, position?: number) => void;
 }
 
-export function BoardColumn({ list, tasks, allLists, onTaskClick, onAddTask, onMoveTask }: BoardColumnProps) {
+export function BoardColumn({ list, tasks, allLists, allTasks, onTaskClick, onAddTask, onMoveTask }: BoardColumnProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
 
@@ -51,8 +52,11 @@ export function BoardColumn({ list, tasks, allLists, onTaskClick, onAddTask, onM
                 index={index}
                 priorityNumber={index + 1}
                 onClick={() => onTaskClick(task)}
-                otherLists={allLists.filter((l) => l._id !== list._id).sort((a, b) => a.position - b.position)}
-                onMoveTo={(targetListId) => onMoveTask(task._id, targetListId)}
+                otherLists={allLists
+                  .filter((l) => l._id !== list._id)
+                  .sort((a, b) => a.position - b.position)
+                  .map((l) => ({ _id: l._id, name: l.name, taskCount: allTasks.filter((t) => t.list === l._id).length }))}
+                onMoveTo={(targetListId, position) => onMoveTask(task._id, targetListId, position)}
               />
             ))}
             {provided.placeholder}

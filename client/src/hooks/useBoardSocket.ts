@@ -24,8 +24,17 @@ export function useBoardSocket(boardId: string | undefined, workspaceId: string 
     const tasksKey = ['tasks', workspaceId, boardId];
     const listsKey = ['board', workspaceId, boardId];
 
+    // This is the single source of truth for all task changes — created,
+    // updated, moved. We deliberately do NOT also mutate the cache locally
+    // when the user performs an action; the server always broadcasts back
+    // to the acting user too, so relying on this one path avoids duplicate
+    // or conflicting updates.
     socket.on('task:created', (task: Task) => {
-      queryClient.setQueryData<Task[]>(tasksKey, (old) => (old ? [...old, task] : [task]));
+      queryClient.setQueryData<Task[]>(tasksKey, (old) => {
+        if (!old) return [task];
+        if (old.some((t) => t._id === task._id)) return old;
+        return [...old, task];
+      });
     });
 
     socket.on('task:updated', (task: Task) => {
@@ -34,10 +43,15 @@ export function useBoardSocket(boardId: string | undefined, workspaceId: string 
       );
     });
 
-    socket.on('task:moved', (task: Task) => {
-      queryClient.setQueryData<Task[]>(tasksKey, (old) =>
-        old ? old.map((t) => (t._id === task._id ? task : t)) : old
-      );
+    // Emitted whenever a task is moved — carries every task in the
+    // affected list(s), since moving one task renumbers its siblings too.
+    socket.on('tasks:reordered', (affectedTasks: Task[]) => {
+      queryClient.setQueryData<Task[]>(tasksKey, (old) => {
+        if (!old) return affectedTasks;
+        const affectedIds = new Set(affectedTasks.map((t) => t._id));
+        const untouched = old.filter((t) => !affectedIds.has(t._id));
+        return [...untouched, ...affectedTasks];
+      });
     });
 
     socket.on('task:deleted', ({ taskId }: { taskId: string }) => {

@@ -8,13 +8,41 @@ interface TaskCardProps {
   index: number;
   priorityNumber: number;
   onClick: () => void;
-  otherLists: { _id: string; name: string }[];
-  onMoveTo: (targetListId: string) => void;
+  otherLists: { _id: string; name: string; taskCount: number }[];
+  onMoveTo: (targetListId: string, position?: number) => void;
 }
 
 export function TaskCard({ task, index, priorityNumber, onClick, otherLists, onMoveTo }: TaskCardProps) {
   const [showMoveMenu, setShowMoveMenu] = useState(false);
+  const [positionInputFor, setPositionInputFor] = useState<{ listId: string; listName: string; maxPosition: number } | null>(null);
+  const [positionValue, setPositionValue] = useState('');
+  const [positionError, setPositionError] = useState<string | null>(null);
+
   const overdue = task.dueDate && isPast(new Date(task.dueDate));
+
+  function handlePositionSubmit() {
+    if (!positionInputFor) return;
+
+    const trimmed = positionValue.trim();
+    if (!/^\d+$/.test(trimmed)) {
+      setPositionError('Invalid input! Please enter numbers only.');
+      return;
+    }
+
+    const num = parseInt(trimmed, 10);
+    if (num < 1 || num > positionInputFor.maxPosition) {
+      setPositionError(
+        `Invalid position! Only positions between 1 and ${positionInputFor.maxPosition} exist in "${positionInputFor.listName}".`
+      );
+      return;
+    }
+
+    onMoveTo(positionInputFor.listId, num - 1);
+    setPositionInputFor(null);
+    setPositionValue('');
+    setPositionError(null);
+    setShowMoveMenu(false);
+  }
 
   return (
     <Draggable draggableId={task._id} index={index}>
@@ -39,6 +67,7 @@ export function TaskCard({ task, index, priorityNumber, onClick, otherLists, onM
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowMoveMenu((v) => !v);
+                    setPositionInputFor(null);
                   }}
                   className="rounded px-1.5 py-0.5 text-xs text-text-secondary hover:bg-surface-hover hover:text-text-primary"
                   aria-label="Move task to another list"
@@ -49,20 +78,68 @@ export function TaskCard({ task, index, priorityNumber, onClick, otherLists, onM
                 {showMoveMenu && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-border bg-surface py-1 shadow-lg"
+                    className="absolute right-0 top-full z-10 mt-1 w-56 rounded-lg border border-border bg-surface py-1 shadow-lg"
                   >
-                    {otherLists.map((l) => (
-                      <button
-                        key={l._id}
-                        onClick={() => {
-                          onMoveTo(l._id);
-                          setShowMoveMenu(false);
-                        }}
-                        className="block w-full px-3 py-1.5 text-left text-xs text-text-primary hover:bg-surface-hover"
-                      >
-                        {l.name}
-                      </button>
-                    ))}
+                    {!positionInputFor ? (
+                      otherLists.map((l) => (
+                        <div key={l._id} className="flex items-center justify-between px-2 py-1 hover:bg-surface-hover">
+                          <button
+                            onClick={() => {
+                              onMoveTo(l._id);
+                              setShowMoveMenu(false);
+                            }}
+                            className="flex-1 py-0.5 text-left text-xs text-text-primary"
+                          >
+                            {l.name}
+                          </button>
+                          <button
+                            onClick={() =>
+                              setPositionInputFor({ listId: l._id, listName: l.name, maxPosition: l.taskCount + 1 })
+                            }
+                            className="rounded px-1.5 py-0.5 text-[10px] text-brand-violet hover:bg-brand-violet/10"
+                          >
+                            #
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-2.5">
+                        <p className="mb-1.5 text-xs text-text-secondary">
+                          Position in "{positionInputFor.listName}" (1–{positionInputFor.maxPosition}):
+                        </p>
+                        <div className="flex gap-1.5">
+                          <input
+                            autoFocus
+                            type="text"
+                            inputMode="numeric"
+                            value={positionValue}
+                            onChange={(e) => {
+                              setPositionValue(e.target.value);
+                              setPositionError(null);
+                            }}
+                            onKeyDown={(e) => e.key === 'Enter' && handlePositionSubmit()}
+                            placeholder="e.g. 3"
+                            className="w-16 rounded border border-border bg-bg px-2 py-1 text-xs text-text-primary outline-none focus:border-brand-violet"
+                          />
+                          <button
+                            onClick={handlePositionSubmit}
+                            className="rounded bg-brand-gradient px-2 py-1 text-xs font-medium text-white"
+                          >
+                            Go
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPositionInputFor(null);
+                              setPositionError(null);
+                            }}
+                            className="rounded px-2 py-1 text-xs text-text-secondary hover:bg-surface-hover"
+                          >
+                            Back
+                          </button>
+                        </div>
+                        {positionError && <p className="mt-1.5 text-[11px] text-danger">{positionError}</p>}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -70,29 +70,13 @@ export function BoardPage() {
     setSelectedAssigneeIds([]);
   }
 
-  async function handleMoveTask(taskId: string, targetListId: string) {
-    if (!workspaceId || !boardId) return;
-    const tasksInTargetList = (tasks || []).filter((t) => t.list === targetListId);
-    const newPosition = tasksInTargetList.length;
-
-    const tasksKey = ['tasks', workspaceId, boardId];
-    const previousTasks = queryClient.getQueryData<Task[]>(tasksKey);
-
-    queryClient.setQueryData<Task[]>(tasksKey, (old) =>
-      old ? old.map((t) => (t._id === taskId ? { ...t, list: targetListId, position: newPosition } : t)) : old
-    );
-
-    try {
-      await moveTaskRequest(workspaceId, boardId, taskId, targetListId, newPosition);
-    } catch {
-      queryClient.setQueryData(tasksKey, previousTasks);
-    }
-  }
-
+  // Note: we intentionally do NOT update the local cache here. The server
+  // broadcasts every create/move back over the socket to the acting user
+  // too — relying on that single path avoids duplicate or conflicting
+  // task entries, which is what caused the earlier duplication bug.
   async function handleAddTask(listId: string, title: string) {
     if (!workspaceId || !boardId) return;
-    const task = await createTaskRequest(workspaceId, boardId, listId, { title });
-    queryClient.setQueryData<Task[]>(['tasks', workspaceId, boardId], (old) => (old ? [...old, task] : [task]));
+    await createTaskRequest(workspaceId, boardId, listId, { title });
   }
 
   async function handleAddList(e: React.FormEvent) {
@@ -121,26 +105,18 @@ export function BoardPage() {
     navigate(`/workspaces/${workspaceId}`);
   }
 
+  async function handleMoveTask(taskId: string, targetListId: string, targetPosition?: number) {
+    if (!workspaceId || !boardId) return;
+    const position =
+      targetPosition !== undefined ? targetPosition : (tasks || []).filter((t) => t.list === targetListId).length;
+    await moveTaskRequest(workspaceId, boardId, taskId, targetListId, position);
+  }
+
   async function handleDragEnd(result: DropResult) {
     const { destination, source, draggableId } = result;
     if (!destination || !workspaceId || !boardId) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
-
-    const tasksKey = ['tasks', workspaceId, boardId];
-    const previousTasks = queryClient.getQueryData<Task[]>(tasksKey);
-
-    queryClient.setQueryData<Task[]>(tasksKey, (old) => {
-      if (!old) return old;
-      return old.map((t) =>
-        t._id === draggableId ? { ...t, list: destination.droppableId, position: destination.index } : t
-      );
-    });
-
-    try {
-      await moveTaskRequest(workspaceId, boardId, draggableId, destination.droppableId, destination.index);
-    } catch {
-      queryClient.setQueryData(tasksKey, previousTasks);
-    }
+    await moveTaskRequest(workspaceId, boardId, draggableId, destination.droppableId, destination.index);
   }
 
   if (boardLoading || !boardData) {
@@ -224,6 +200,7 @@ export function BoardPage() {
               key={list._id}
               list={list}
               allLists={sortedLists}
+              allTasks={tasks || []}
               tasks={filteredTasks.filter((t) => t.list === list._id).sort((a, b) => a.position - b.position)}
               onTaskClick={setSelectedTask}
               onAddTask={handleAddTask}
