@@ -1,24 +1,47 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { format, isPast } from 'date-fns';
 import type { Task } from '../types';
+
+interface MenuListOption {
+  _id: string;
+  name: string;
+  taskCount: number;
+  isCurrent: boolean;
+}
 
 interface TaskCardProps {
   task: Task;
   index: number;
   priorityNumber: number;
   onClick: () => void;
-  otherLists: { _id: string; name: string; taskCount: number }[];
+  menuLists: MenuListOption[];
   onMoveTo: (targetListId: string, position?: number) => void;
 }
 
-export function TaskCard({ task, index, priorityNumber, onClick, otherLists, onMoveTo }: TaskCardProps) {
+export function TaskCard({ task, index, priorityNumber, onClick, menuLists, onMoveTo }: TaskCardProps) {
   const [showMoveMenu, setShowMoveMenu] = useState(false);
   const [positionInputFor, setPositionInputFor] = useState<{ listId: string; listName: string; maxPosition: number } | null>(null);
   const [positionValue, setPositionValue] = useState('');
   const [positionError, setPositionError] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const overdue = task.dueDate && isPast(new Date(task.dueDate));
+
+  useEffect(() => {
+    if (!showMoveMenu) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMoveMenu(false);
+        setPositionInputFor(null);
+        setPositionError(null);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoveMenu]);
 
   function handlePositionSubmit() {
     if (!positionInputFor) return;
@@ -61,89 +84,94 @@ export function TaskCard({ task, index, priorityNumber, onClick, otherLists, onM
               {priorityNumber}
             </span>
 
-            {otherLists.length > 0 && (
-              <div className="relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMoveMenu((v) => !v);
-                    setPositionInputFor(null);
-                  }}
-                  className="rounded px-1.5 py-0.5 text-xs text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-                  aria-label="Move task to another list"
-                >
-                  Move ▾
-                </button>
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMoveMenu((v) => !v);
+                  setPositionInputFor(null);
+                }}
+                className="rounded px-1.5 py-0.5 text-xs text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+                aria-label="Move or reorder this task"
+              >
+                Move ▾
+              </button>
 
-                {showMoveMenu && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-full z-10 mt-1 w-56 rounded-lg border border-border bg-surface py-1 shadow-lg"
-                  >
-                    {!positionInputFor ? (
-                      otherLists.map((l) => (
-                        <div key={l._id} className="flex items-center justify-between px-2 py-1 hover:bg-surface-hover">
-                          <button
-                            onClick={() => {
-                              onMoveTo(l._id);
-                              setShowMoveMenu(false);
-                            }}
-                            className="flex-1 py-0.5 text-left text-xs text-text-primary"
-                          >
-                            {l.name}
-                          </button>
-                          <button
-                            onClick={() =>
-                              setPositionInputFor({ listId: l._id, listName: l.name, maxPosition: l.taskCount + 1 })
-                            }
-                            className="rounded px-1.5 py-0.5 text-[10px] text-brand-violet hover:bg-brand-violet/10"
-                          >
-                            #
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-2.5">
-                        <p className="mb-1.5 text-xs text-text-secondary">
-                          Position in "{positionInputFor.listName}" (1–{positionInputFor.maxPosition}):
-                        </p>
-                        <div className="flex gap-1.5">
-                          <input
-                            autoFocus
-                            type="text"
-                            inputMode="numeric"
-                            value={positionValue}
-                            onChange={(e) => {
-                              setPositionValue(e.target.value);
-                              setPositionError(null);
-                            }}
-                            onKeyDown={(e) => e.key === 'Enter' && handlePositionSubmit()}
-                            placeholder="e.g. 3"
-                            className="w-16 rounded border border-border bg-bg px-2 py-1 text-xs text-text-primary outline-none focus:border-brand-violet"
-                          />
-                          <button
-                            onClick={handlePositionSubmit}
-                            className="rounded bg-brand-gradient px-2 py-1 text-xs font-medium text-white"
-                          >
-                            Go
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPositionInputFor(null);
-                              setPositionError(null);
-                            }}
-                            className="rounded px-2 py-1 text-xs text-text-secondary hover:bg-surface-hover"
-                          >
-                            Back
-                          </button>
-                        </div>
-                        {positionError && <p className="mt-1.5 text-[11px] text-danger">{positionError}</p>}
+              {showMoveMenu && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 top-full z-10 mt-1 w-60 rounded-lg border border-border bg-surface py-1 shadow-lg"
+                >
+                  {!positionInputFor ? (
+                    menuLists.map((l) => (
+                      <div key={l._id} className="flex items-center justify-between px-2 py-1 hover:bg-surface-hover">
+                        <button
+                          onClick={() => {
+                            if (!l.isCurrent) onMoveTo(l._id);
+                          }}
+                          disabled={l.isCurrent}
+                          className={`flex-1 py-0.5 text-left text-xs ${
+                            l.isCurrent ? 'text-text-secondary' : 'text-text-primary'
+                          }`}
+                        >
+                          {l.name} {l.isCurrent && <span className="text-[10px]">(current list)</span>}
+                        </button>
+                        <button
+                          onClick={() =>
+                            setPositionInputFor({
+                              listId: l._id,
+                              listName: l.name,
+                              maxPosition: l.isCurrent ? l.taskCount : l.taskCount + 1,
+                            })
+                          }
+                          className="rounded px-1.5 py-0.5 text-[10px] text-brand-violet hover:bg-brand-violet/10"
+                          title="Move to an exact position"
+                        >
+                          #
+                        </button>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                    ))
+                  ) : (
+                    <div className="p-2.5">
+                      <p className="mb-1.5 text-xs text-text-secondary">
+                        Position in "{positionInputFor.listName}" (1–{positionInputFor.maxPosition}):
+                      </p>
+                      <div className="flex gap-1.5">
+                        <input
+                          autoFocus
+                          type="text"
+                          inputMode="numeric"
+                          value={positionValue}
+                          onChange={(e) => {
+                            setPositionValue(e.target.value);
+                            setPositionError(null);
+                          }}
+                          onKeyDown={(e) => e.key === 'Enter' && handlePositionSubmit()}
+                          placeholder="e.g. 3"
+                          className="w-16 rounded border border-border bg-bg px-2 py-1 text-xs text-text-primary outline-none focus:border-brand-violet"
+                        />
+                        <button
+                          onClick={handlePositionSubmit}
+                          className="rounded bg-brand-gradient px-2 py-1 text-xs font-medium text-white"
+                        >
+                          Go
+                        </button>
+                        <button
+                          onClick={() => {
+                            setPositionInputFor(null);
+                            setPositionError(null);
+                          }}
+                          className="rounded px-2 py-1 text-xs text-text-secondary hover:bg-surface-hover"
+                        >
+                          Back
+                        </button>
+                      </div>
+                      {positionError && <p className="mt-1.5 text-[11px] text-danger">{positionError}</p>}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {task.labels.length > 0 && (

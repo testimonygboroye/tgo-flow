@@ -52,10 +52,14 @@ export function BoardColumn({ list, tasks, allLists, allTasks, onTaskClick, onAd
                 index={index}
                 priorityNumber={index + 1}
                 onClick={() => onTaskClick(task)}
-                otherLists={allLists
-                  .filter((l) => l._id !== list._id)
+                menuLists={allLists
                   .sort((a, b) => a.position - b.position)
-                  .map((l) => ({ _id: l._id, name: l.name, taskCount: allTasks.filter((t) => t.list === l._id).length }))}
+                  .map((l) => ({
+                    _id: l._id,
+                    name: l.name,
+                    taskCount: allTasks.filter((t) => t.list === l._id).length,
+                    isCurrent: l._id === list._id,
+                  }))}
                 onMoveTo={(targetListId, position) => onMoveTask(task._id, targetListId, position)}
               />
             ))}
