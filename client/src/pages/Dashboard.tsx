@@ -8,6 +8,8 @@ import { logoutRequest } from '../services/auth.service';
 import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { HelpButton } from '../components/HelpButton';
+import { WelcomePopup } from '../components/WelcomePopup';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -49,6 +51,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-bg">
+      <WelcomePopup />
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
@@ -56,6 +59,7 @@ export function Dashboard() {
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </div>
           <div className="flex items-center gap-4">
+            <HelpButton />
             <ThemeToggle />
             <div className="flex items-center gap-3">
               <span className="text-sm text-text-secondary hidden sm:inline">{user?.name}</span>

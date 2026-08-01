@@ -17,6 +17,7 @@ import { createBoardRequest, listBoardsRequest } from '../services/board.service
 import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { HelpButton } from '../components/HelpButton';
 import axios from 'axios';
 import type { MembershipRole } from '../types';
 
@@ -168,7 +169,10 @@ export function WorkspaceDetail() {
             <Logo className="h-7 w-7" />
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <HelpButton />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

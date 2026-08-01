@@ -15,6 +15,7 @@ const WorkspaceDetail = lazy(() => import('./pages/WorkspaceDetail').then((m) =>
 const BoardPage = lazy(() => import('./pages/BoardPage').then((m) => ({ default: m.BoardPage })));
 const AcceptInvite = lazy(() => import('./pages/AcceptInvite').then((m) => ({ default: m.AcceptInvite })));
 const NotFound = lazy(() => import('./pages/NotFound').then((m) => ({ default: m.NotFound })));
+const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 
 function PageLoader() {
   return (
@@ -40,6 +41,7 @@ function AppRoutes() {
           <Route path="/workspaces/:workspaceId/boards/:boardId" element={<BoardPage />} />
         </Route>
         <Route path="/invites/accept" element={<AcceptInvite />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
