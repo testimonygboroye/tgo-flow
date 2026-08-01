@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listWorkspacesRequest, createWorkspaceRequest } from '../services/workspace.service';
 import { logoutRequest } from '../services/auth.service';
@@ -59,6 +59,14 @@ export function Dashboard() {
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/feedback" className="text-sm font-medium text-text-secondary hover:text-brand-violet">
+              Feedback
+            </Link>
+            {user?.email === 'testimonygboroye.dev@gmail.com' && (
+              <Link to="/messages" className="text-sm font-medium text-text-secondary hover:text-brand-violet">
+                Messages
+              </Link>
+            )}
             <HelpButton />
             <ThemeToggle />
             <div className="flex items-center gap-3">
