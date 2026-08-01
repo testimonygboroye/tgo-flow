@@ -59,14 +59,6 @@ export function Dashboard() {
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/feedback" className="text-sm font-medium text-text-secondary hover:text-brand-violet">
-              Feedback
-            </Link>
-            {user?.email === 'testimonygboroye.dev@gmail.com' && (
-              <Link to="/messages" className="text-sm font-medium text-text-secondary hover:text-brand-violet">
-                Messages
-              </Link>
-            )}
             <HelpButton />
             <ThemeToggle />
             <div className="flex items-center gap-3">

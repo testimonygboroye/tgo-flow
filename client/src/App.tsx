@@ -5,6 +5,7 @@ import { queryClient } from './lib/queryClient';
 import { useAuthBootstrap } from './hooks/useAuthBootstrap';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { FloatingBrandButton } from './components/FloatingBrandButton';
 
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
 const Register = lazy(() => import('./pages/Register').then((m) => ({ default: m.Register })));
@@ -31,8 +32,10 @@ function AppRoutes() {
   useAuthBootstrap();
 
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
+    <>
+      <FloatingBrandButton />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -47,9 +50,10 @@ function AppRoutes() {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </>
   );
 }
 

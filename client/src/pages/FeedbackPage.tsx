@@ -61,9 +61,10 @@ export function FeedbackPage() {
             </>
           ) : (
             <>
-              <h2 className="font-display text-xl font-semibold text-text-primary">Share your feedback</h2>
+              <h2 className="font-display text-xl font-semibold text-text-primary">Message the founder</h2>
               <p className="mt-1 text-sm text-text-secondary">
-                Suggestions, likes, dislikes — we'd love to hear what you think.
+                This message goes directly to Testimony Oluwatimilehin Gboroye, the founder of TGO DevStudio.
+                Share suggestions, things you liked, things you didn't, or any other feedback about TGO Flow.
               </p>
 
               <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
@@ -110,7 +111,7 @@ export function FeedbackPage() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
-                    placeholder="Tell us what you think, what you liked, what could be better..."
+                    placeholder="Write your message to the founder here — feedback, suggestions, or anything else..."
                   />
                 </div>
 
