@@ -19,4 +19,5 @@ export const env = {
   brevoApiKey: required('BREVO_API_KEY'),
   senderEmail: required('SENDER_EMAIL'),
   senderName: process.env.SENDER_NAME || 'TGO Flow',
+  ownerEmail: required('OWNER_EMAIL'),
 };

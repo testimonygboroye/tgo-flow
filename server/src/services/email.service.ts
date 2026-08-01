@@ -75,3 +75,19 @@ export async function sendPasswordResetEmail(toEmail: string, resetLink: string)
     `,
   });
 }
+
+export async function sendReviewNotificationEmail(ownerEmail: string, reviewerName: string, reviewerEmail: string, reviewerRole: string, message: string): Promise<void> {
+  await sendEmail({
+    to: ownerEmail,
+    subject: `New feedback received from ${reviewerName}`,
+    htmlContent: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #1B1830;">New TGO Flow Feedback</h2>
+        <p style="color: #6E6A85; font-size: 14px;"><strong>From:</strong> ${reviewerName} (${reviewerEmail})</p>
+        ${reviewerRole ? `<p style="color: #6E6A85; font-size: 14px;"><strong>Role:</strong> ${reviewerRole}</p>` : ''}
+        <div style="margin-top: 16px; padding: 16px; background: #F7F6FB; border-radius: 8px; color: #1B1830; white-space: pre-wrap;">${message}</div>
+        <p style="color: #9B96B3; font-size: 12px; margin-top: 20px;">Log in to TGO Flow and open your Messages page to manage this.</p>
+      </div>
+    `,
+  });
+}

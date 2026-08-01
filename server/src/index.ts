@@ -11,6 +11,7 @@ import { connectDB } from './config/db';
 import authRoutes from './routes/auth.routes';
 import workspaceRoutes from './routes/workspace.routes';
 import boardRoutes from './routes/board.routes';
+import reviewRoutes from './routes/review.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { initSocketServer } from './sockets';
 import { generalApiLimiter } from './middleware/rateLimiter';
@@ -38,6 +39,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/workspaces/:workspaceId/boards', boardRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ status: 'error', message: 'Route not found' });
