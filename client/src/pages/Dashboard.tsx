@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listWorkspacesRequest, createWorkspaceRequest } from '../services/workspace.service';
 import { logoutRequest } from '../services/auth.service';
