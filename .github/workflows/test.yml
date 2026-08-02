@@ -38,6 +38,7 @@ jobs:
           CLIENT_URL: http://localhost:5173
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           SENDER_EMAIL: testimonygboroye.dev@gmail.com
+          OWNER_EMAIL: testimonygboroye.dev@gmail.com
           SENDER_NAME: TGO Flow
         run: npm test
 

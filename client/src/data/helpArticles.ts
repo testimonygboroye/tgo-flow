@@ -11,9 +11,23 @@ export const PUBLIC_CATEGORIES = ['Getting Started'];
 
 export const helpArticles: HelpArticle[] = [
   {
+    id: 'about-founder',
+    category: 'Getting Started',
+    title: 'About the founder and TGO DevStudio',
+    keywords: ['founder', 'tgo devstudio', 'who made this', 'testimony', 'about tgo devstudio', 'brand'],
+    content: 'TGO Flow is built and maintained by Testimony Oluwatimilehin Gboroye, the founder of TGO DevStudio. TGO DevStudio is the technology brand behind TGO Flow, focused on building software products with real-world usefulness and polish. TGO Flow is TGO DevStudio\'s flagship project — a demonstration of full production-quality software engineering. You can reach the founder directly at any time using the floating ✦ button available throughout the app.',
+  },
+  {
+    id: 'navigate-back',
+    category: 'Getting Started',
+    title: 'How to go back to a previous page',
+    keywords: ['back', 'go back', 'previous page', 'navigate back'],
+    content: 'You can go back in two ways: use your phone or browser\'s own back button (the normal back gesture or arrow you already use elsewhere), or click the TGO Flow logo at the top-left of most pages, which takes you back to your workspace or dashboard.',
+  },
+  {
     id: 'what-is-tgo-flow',
     category: 'Getting Started',
-    title: 'What is TGO Flow?',
+    title: 'About TGO Flow',
     keywords: ['what', 'about', 'overview', 'intro', 'tgo flow'],
     content: 'TGO Flow helps teams organize work using boards. Each board has columns (lists) like "To Do," "In Progress," and "Done." You create tasks, move them across columns as work progresses, assign people, and see updates live as your team works.',
   },
@@ -235,7 +249,7 @@ export const additionalHelpArticles: HelpArticle[] = [
     category: 'Feedback & Support',
     title: 'What is the floating ✦ button for?',
     keywords: ['floating button', 'brand button', 'star button', 'circle button'],
-    content: 'This small draggable button gives you quick access to things related to TGO DevStudio and this project\'s founder — sending feedback, contacting the founder directly on WhatsApp or by phone, and links to the founder\'s GitHub, Facebook, and Instagram. It is separate from the project\'s own features. You can drag it to any corner of the screen; clicking it (without dragging) opens the menu, and clicking anywhere outside closes it.',
+    content: 'This small draggable button gives you quick access to things related to TGO DevStudio (the technology brand behind TGO Flow — see \'About the founder and TGO DevStudio\' above) and this project\'s founder — sending feedback, contacting the founder directly on WhatsApp or by phone, and links to the founder\'s GitHub, Facebook, and Instagram. It is separate from the project\'s own features. You can drag it to any corner of the screen; clicking it (without dragging) opens the menu, and clicking anywhere outside closes it.',
   },
   {
     id: 'contact-founder-direct',

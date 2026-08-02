@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { helpArticles, searchHelpArticles, getPublicArticles } from '../data/helpArticles';
 import type { HelpArticle } from '../data/helpArticles';
@@ -10,6 +10,7 @@ export function HelpPage() {
   const isPublicOnly = searchParams.get('public') === '1';
   const [query, setQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<HelpArticle | null>(null);
+  const savedScrollY = useRef(0);
 
   const baseArticles = isPublicOnly ? getPublicArticles() : helpArticles;
   const results = useMemo(() => searchHelpArticles(query, baseArticles), [query, baseArticles]);
@@ -69,7 +70,10 @@ export function HelpPage() {
         {selectedArticle ? (
           <div className="rounded-xl border border-border bg-surface p-6">
             <button
-              onClick={() => setSelectedArticle(null)}
+              onClick={() => {
+                setSelectedArticle(null);
+                requestAnimationFrame(() => window.scrollTo(0, savedScrollY.current));
+              }}
               className="mb-4 text-sm font-medium text-brand-violet hover:underline"
             >
               ← Back to all results
@@ -95,7 +99,10 @@ export function HelpPage() {
                   {articles.map((article) => (
                     <button
                       key={article.id}
-                      onClick={() => setSelectedArticle(article)}
+                      onClick={() => {
+                        savedScrollY.current = window.scrollY;
+                        setSelectedArticle(article);
+                      }}
                       className="rounded-lg border border-border bg-surface px-4 py-3 text-left transition hover:border-brand-violet/40 hover:shadow-sm"
                     >
                       <p className="font-medium text-text-primary">{article.title}</p>

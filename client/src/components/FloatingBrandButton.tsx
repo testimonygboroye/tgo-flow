@@ -163,7 +163,9 @@ export function FloatingBrandButton() {
         aria-label="TGO DevStudio brand menu"
       >
         {unreadCount > 0 ? (
-          <span className="text-base font-bold">{unreadCount > 99 ? '99+' : unreadCount}</span>
+          <span className="text-base font-bold text-danger">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
         ) : (
           '✦'
         )}
