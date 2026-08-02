@@ -39,7 +39,7 @@ export function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
       <div className="absolute top-6 right-6 flex items-center gap-2">
-        <HelpButton />
+        <HelpButton publicOnly />
         <ThemeToggle />
       </div>
 

@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom';
 
-export function HelpButton() {
+interface HelpButtonProps {
+  publicOnly?: boolean;
+}
+
+export function HelpButton({ publicOnly }: HelpButtonProps) {
   return (
     <Link
-      to="/help"
+      to={publicOnly ? '/help?public=1' : '/help'}
       title="Help & Guide"
       className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-text-secondary transition hover:bg-surface-hover hover:text-text-primary"
     >

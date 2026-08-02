@@ -1,15 +1,18 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { helpArticles, searchHelpArticles } from '../data/helpArticles';
+import { Link, useSearchParams } from 'react-router-dom';
+import { helpArticles, searchHelpArticles, getPublicArticles } from '../data/helpArticles';
 import type { HelpArticle } from '../data/helpArticles';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 
 export function HelpPage() {
+  const [searchParams] = useSearchParams();
+  const isPublicOnly = searchParams.get('public') === '1';
   const [query, setQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<HelpArticle | null>(null);
 
-  const results = useMemo(() => searchHelpArticles(query), [query]);
+  const baseArticles = isPublicOnly ? getPublicArticles() : helpArticles;
+  const results = useMemo(() => searchHelpArticles(query, baseArticles), [query, baseArticles]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, HelpArticle[]>();
@@ -25,7 +28,7 @@ export function HelpPage() {
     <div className="min-h-screen bg-bg">
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link to="/dashboard" className="flex items-center gap-2.5">
+          <Link to={isPublicOnly ? '/login' : '/dashboard'} className="flex items-center gap-2.5">
             <Logo className="h-7 w-7" />
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </Link>
@@ -36,7 +39,9 @@ export function HelpPage() {
       <main className="mx-auto max-w-4xl px-6 py-10">
         <h1 className="mb-2 font-display text-2xl font-bold text-text-primary">Help & Guide</h1>
         <p className="mb-6 text-text-secondary">
-          Search for anything — try "board," "invite," "move task," or "how to..."
+          {isPublicOnly
+            ? 'Getting started — signing up, logging in, and general questions about TGO Flow.'
+            : 'Search for anything — try "board," "invite," "move task," or "how to..."'}
         </p>
 
         <div className="relative mb-8">
@@ -103,7 +108,7 @@ export function HelpPage() {
         )}
 
         <p className="mt-10 text-center text-xs text-text-secondary">
-          {helpArticles.length} articles available. Can't find what you need? More help is on the way.
+          {baseArticles.length} articles available. Can't find what you need? More help is on the way.
         </p>
       </main>
     </div>

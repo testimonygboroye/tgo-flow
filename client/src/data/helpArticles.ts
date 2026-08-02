@@ -4,7 +4,10 @@ export interface HelpArticle {
   title: string;
   keywords: string[];
   content: string;
+  publicSafe?: boolean;
 }
+
+export const PUBLIC_CATEGORIES = ['Getting Started'];
 
 export const helpArticles: HelpArticle[] = [
   {
@@ -198,12 +201,50 @@ export const helpArticles: HelpArticle[] = [
   },
 ];
 
-export function searchHelpArticles(query: string): HelpArticle[] {
+export function searchHelpArticles(query: string, articleList: HelpArticle[] = helpArticles): HelpArticle[] {
   const normalized = query.trim().toLowerCase();
-  if (!normalized) return helpArticles;
+  if (!normalized) return articleList;
 
-  return helpArticles.filter((article) => {
+  return articleList.filter((article) => {
     const haystack = `${article.title} ${article.keywords.join(' ')} ${article.content}`.toLowerCase();
     return haystack.includes(normalized);
   });
 }
+
+export function getPublicArticles(): HelpArticle[] {
+  return helpArticles.filter((a) => PUBLIC_CATEGORIES.includes(a.category));
+}
+
+export const additionalHelpArticles: HelpArticle[] = [
+  {
+    id: 'rename-delete-board-updated',
+    category: 'Boards',
+    title: 'How to see when a board or workspace was created',
+    keywords: ['created date', 'created at', 'when created', 'age'],
+    content: 'On your Dashboard and inside a workspace\'s Boards tab, each card shows how long ago it was created (e.g. "Created 2 hours ago"). Hover over or tap-and-hold the text on most devices to see the exact date and time.',
+  },
+  {
+    id: 'feedback-form',
+    category: 'Feedback & Support',
+    title: 'How to give feedback or message the founder',
+    keywords: ['feedback', 'message founder', 'contact', 'suggestion', 'review'],
+    content: 'Click the floating ✦ button (usually near a bottom corner of the screen — you can drag it anywhere you like) and choose "Send Feedback." Your message goes directly and privately to the founder of TGO DevStudio, along with your name and email so they can follow up if needed.',
+  },
+  {
+    id: 'floating-brand-button',
+    category: 'Feedback & Support',
+    title: 'What is the floating ✦ button for?',
+    keywords: ['floating button', 'brand button', 'star button', 'circle button'],
+    content: 'This small draggable button gives you quick access to things related to TGO DevStudio and this project\'s founder — sending feedback, contacting the founder directly on WhatsApp or by phone, and links to the founder\'s GitHub, Facebook, and Instagram. It is separate from the project\'s own features. You can drag it to any corner of the screen; clicking it (without dragging) opens the menu, and clicking anywhere outside closes it.',
+  },
+  {
+    id: 'contact-founder-direct',
+    category: 'Feedback & Support',
+    title: 'How to contact the founder directly',
+    keywords: ['whatsapp', 'phone', 'call founder', 'direct contact'],
+    content: 'Open the floating ✦ button menu and choose "WhatsApp the founder" to start a chat, or "Call the founder" to dial directly. These go straight to the founder, not to general project support.',
+  },
+]
+
+helpArticles.push(...additionalHelpArticles);
+

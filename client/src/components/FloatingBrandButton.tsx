@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth.store';
+import { useQuery } from '@tanstack/react-query';
+import { listReviewsRequest } from '../services/review.service';
 
 const OWNER_EMAIL = 'testimonygboroye.dev@gmail.com';
 const WHATSAPP_LINK = 'https://wa.me/message/LUJ6PXE3ISDZF1';
@@ -15,6 +17,15 @@ export function FloatingBrandButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [dragging, setDragging] = useState(false);
+
+  const { data: reviews } = useQuery({
+    queryKey: ['reviews'],
+    queryFn: listReviewsRequest,
+    enabled: user?.email === OWNER_EMAIL,
+    refetchInterval: 20000,
+  });
+
+  const unreadCount = user?.email === OWNER_EMAIL ? (reviews || []).filter((r) => !r.isRead).length : 0;
   const dragStartRef = useRef({ startX: 0, startY: 0, origX: 0, origY: 0, moved: false });
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -147,11 +158,15 @@ export function FloatingBrandButton() {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        className="flex h-14 w-14 touch-none items-center justify-center rounded-full bg-brand-gradient text-2xl text-white shadow-xl transition active:scale-95"
+        className="relative flex h-14 w-14 touch-none items-center justify-center rounded-full bg-brand-gradient text-2xl text-white shadow-xl transition active:scale-95"
         style={{ cursor: dragging ? 'grabbing' : 'grab' }}
         aria-label="TGO DevStudio brand menu"
       >
-        ✦
+        {unreadCount > 0 ? (
+          <span className="text-base font-bold">{unreadCount > 99 ? '99+' : unreadCount}</span>
+        ) : (
+          '✦'
+        )}
       </button>
     </div>
   );
