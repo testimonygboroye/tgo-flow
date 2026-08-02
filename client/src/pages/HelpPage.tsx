@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { helpArticles, searchHelpArticles, getPublicArticles } from '../data/helpArticles';
 import type { HelpArticle } from '../data/helpArticles';
