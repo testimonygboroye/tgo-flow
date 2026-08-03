@@ -6,6 +6,7 @@ import { useAuthBootstrap } from './hooks/useAuthBootstrap';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FloatingBrandButton } from './components/FloatingBrandButton';
+import { CommandPalette } from './components/CommandPalette';
 
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
 const Register = lazy(() => import('./pages/Register').then((m) => ({ default: m.Register })));
@@ -34,6 +35,7 @@ function AppRoutes() {
   return (
     <>
       <FloatingBrandButton />
+      <CommandPalette />
       <Suspense fallback={<PageLoader />}>
         <Routes>
         <Route path="/login" element={<Login />} />

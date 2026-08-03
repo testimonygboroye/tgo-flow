@@ -11,6 +11,13 @@ export const PUBLIC_CATEGORIES = ['Getting Started'];
 
 export const helpArticles: HelpArticle[] = [
   {
+    id: 'command-palette',
+    category: 'Getting Started',
+    title: 'How to use the command palette (quick actions)',
+    keywords: ['command palette', 'shortcut', 'ctrl k', 'cmd k', 'quick actions'],
+    content: 'On a computer, press Ctrl+K (or Cmd+K on Mac) at any time to open a quick command box. Type a few letters of what you want to do — like \'help,\' \'theme,\' or \'logout\' — and click it. This gives you fast access to common actions without navigating through menus.',
+  },
+  {
     id: 'about-founder',
     category: 'Getting Started',
     title: 'About the founder and TGO DevStudio',
