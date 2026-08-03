@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { useAuthBootstrap } from './hooks/useAuthBootstrap';
+import { useAppReturnTracking } from './hooks/useAppReturnTracking';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FloatingBrandButton } from './components/FloatingBrandButton';
@@ -20,6 +21,7 @@ const NotFound = lazy(() => import('./pages/NotFound').then((m) => ({ default: m
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const FeedbackPage = lazy(() => import('./pages/FeedbackPage').then((m) => ({ default: m.FeedbackPage })));
 const MessagesPage = lazy(() => import('./pages/MessagesPage').then((m) => ({ default: m.MessagesPage })));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 
 function PageLoader() {
   return (
@@ -31,6 +33,7 @@ function PageLoader() {
 
 function AppRoutes() {
   useAuthBootstrap();
+  useAppReturnTracking();
 
   return (
     <>
@@ -47,6 +50,7 @@ function AppRoutes() {
           <Route path="/workspaces/:workspaceId" element={<WorkspaceDetail />} />
           <Route path="/workspaces/:workspaceId/boards/:boardId" element={<BoardPage />} />
           <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
         </Route>
         <Route path="/invites/accept" element={<AcceptInvite />} />
         <Route path="/help" element={<HelpPage />} />

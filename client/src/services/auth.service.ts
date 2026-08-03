@@ -35,3 +35,11 @@ export async function resetPasswordRequest(token: string, password: string): Pro
   const { data } = await api.post('/auth/reset-password', { token, password });
   return data;
 }
+
+export async function recordAppReturnRequest(): Promise<void> {
+  await api.post('/auth/app-return');
+}
+
+export async function deleteAccountRequest(): Promise<void> {
+  await api.delete('/auth/me');
+}

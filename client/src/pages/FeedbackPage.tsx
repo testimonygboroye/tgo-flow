@@ -6,31 +6,75 @@ import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import axios from 'axios';
 
+interface FieldState {
+  value: string;
+  touched: boolean;
+}
+
+function validateName(value: string): string | null {
+  if (value.trim().length < 2) return 'Please enter at least 2 characters.';
+  return null;
+}
+
+function validateEmail(value: string): string | null {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(value.trim())) return 'Please enter a valid email address.';
+  return null;
+}
+
+function validateMessage(value: string): string | null {
+  if (value.trim().length < 10) return 'Your message should be at least 10 characters.';
+  return null;
+}
+
 export function FeedbackPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState<FieldState>({ value: '', touched: false });
+  const [email, setEmail] = useState<FieldState>({ value: '', touched: false });
   const [role, setRole] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<FieldState>({ value: '', touched: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const nameError = name.touched ? validateName(name.value) : null;
+  const emailError = email.touched ? validateEmail(email.value) : null;
+  const messageError = message.touched ? validateMessage(message.value) : null;
+
+  const isFormValid =
+    validateName(name.value) === null &&
+    validateEmail(email.value) === null &&
+    validateMessage(message.value) === null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    setName((s) => ({ ...s, touched: true }));
+    setEmail((s) => ({ ...s, touched: true }));
+    setMessage((s) => ({ ...s, touched: true }));
+
+    if (!isFormValid) return;
+
+    setServerError(null);
     setIsSubmitting(true);
     try {
-      await submitReviewRequest(name, email, role, message);
+      await submitReviewRequest(name.value.trim(), email.value.trim(), role.trim(), message.value.trim());
       setSubmitted(true);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
-        setError(err.response.data.message);
+        setServerError(err.response.data.message);
       } else {
-        setError('Something went wrong. Please try again.');
+        setServerError('Something went wrong. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function fieldClasses(hasError: boolean) {
+    return `w-full rounded-lg border bg-bg px-3.5 py-2.5 text-text-primary outline-none transition focus:ring-1 ${
+      hasError
+        ? 'border-danger focus:border-danger focus:ring-danger'
+        : 'border-border focus:border-brand-violet focus:ring-brand-violet'
+    }`;
   }
 
   return (
@@ -67,28 +111,30 @@ export function FeedbackPage() {
                 Share suggestions, things you liked, things you didn't, or any other feedback about TGO Flow.
               </p>
 
-              <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+              <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-4">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text-primary">Your name</label>
                   <input
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                    value={name.value}
+                    onChange={(e) => setName({ value: e.target.value, touched: name.touched })}
+                    onBlur={() => setName((s) => ({ ...s, touched: true }))}
+                    className={fieldClasses(!!nameError)}
                     placeholder="Jane Doe"
                   />
+                  {nameError && <p className="mt-1 text-xs text-danger">{nameError}</p>}
                 </div>
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text-primary">Your email</label>
                   <input
-                    required
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                    value={email.value}
+                    onChange={(e) => setEmail({ value: e.target.value, touched: email.touched })}
+                    onBlur={() => setEmail((s) => ({ ...s, touched: true }))}
+                    className={fieldClasses(!!emailError)}
                     placeholder="you@example.com"
                   />
+                  {emailError && <p className="mt-1 text-xs text-danger">{emailError}</p>}
                 </div>
 
                 <div>
@@ -98,7 +144,7 @@ export function FeedbackPage() {
                   <input
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                    className={fieldClasses(false)}
                     placeholder="e.g. Tester, Developer, Client"
                   />
                 </div>
@@ -106,18 +152,19 @@ export function FeedbackPage() {
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text-primary">Your feedback</label>
                   <textarea
-                    required
                     rows={5}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                    value={message.value}
+                    onChange={(e) => setMessage({ value: e.target.value, touched: message.touched })}
+                    onBlur={() => setMessage((s) => ({ ...s, touched: true }))}
+                    className={fieldClasses(!!messageError)}
                     placeholder="Write your message to the founder here — feedback, suggestions, or anything else..."
                   />
+                  {messageError && <p className="mt-1 text-xs text-danger">{messageError}</p>}
                 </div>
 
-                {error && (
+                {serverError && (
                   <div className="rounded-lg bg-danger/10 border border-danger/20 px-3.5 py-2.5 text-sm text-danger">
-                    {error}
+                    {serverError}
                   </div>
                 )}
 

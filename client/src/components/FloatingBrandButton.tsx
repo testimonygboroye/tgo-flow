@@ -92,12 +92,20 @@ export function FloatingBrandButton() {
           </button>
 
           {user?.email === OWNER_EMAIL && (
-            <button
-              onClick={() => { setIsOpen(false); navigate('/messages'); }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-hover"
-            >
-              📥 Messages
-            </button>
+            <>
+              <button
+                onClick={() => { setIsOpen(false); navigate('/messages'); }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-hover"
+              >
+                📥 Messages
+              </button>
+              <button
+                onClick={() => { setIsOpen(false); navigate('/analytics'); }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-hover"
+              >
+                📊 User Analytics
+              </button>
+            </>
           )}
 
           <div className="my-1.5 border-t border-border" />

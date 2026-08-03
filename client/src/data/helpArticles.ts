@@ -11,6 +11,13 @@ export const PUBLIC_CATEGORIES = ['Getting Started'];
 
 export const helpArticles: HelpArticle[] = [
   {
+    id: 'delete-account',
+    category: 'Getting Started',
+    title: 'How to delete your account',
+    keywords: ['delete account', 'remove account', 'close account'],
+    content: 'On your Dashboard, click \'Delete account\' at the top. You will need to type an exact confirmation phrase to proceed, as a safety check. If you own any workspaces, you must delete or transfer them first. This action is permanent.',
+  },
+  {
     id: 'command-palette',
     category: 'Getting Started',
     title: 'How to use the command palette (quick actions)',
