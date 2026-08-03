@@ -162,12 +162,15 @@ export function FloatingBrandButton() {
         style={{ cursor: dragging ? 'grabbing' : 'grab' }}
         aria-label="TGO DevStudio brand menu"
       >
+        {unreadCount > 0 && (
+          <span className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-75" />
+        )}
         {unreadCount > 0 ? (
-          <span className="text-base font-bold text-danger">
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white text-base font-extrabold text-red-600 shadow-inner">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         ) : (
-          '✦'
+          <span className="relative">✦</span>
         )}
       </button>
     </div>
