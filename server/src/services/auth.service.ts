@@ -10,6 +10,9 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 import { sha256 } from '../utils/hash';
 import { parseDurationToMs } from '../utils/time';
 import { env } from '../config/env';
+import { logAuthEvent } from './authEvent.service';
+import { Membership } from '../models/Membership';
+import { Workspace } from '../models/Workspace';
 
 const BCRYPT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
@@ -45,6 +48,8 @@ export async function registerUser(name: string, email: string, password: string
 
   const { accessToken, refreshToken } = await issueTokens(user._id);
 
+  await logAuthEvent(user._id.toString(), user.email, user.name, 'register');
+
   return {
     user: { id: user._id.toString(), name: user.name, email: user.email },
     accessToken,
@@ -64,6 +69,8 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   }
 
   const { accessToken, refreshToken } = await issueTokens(user._id);
+
+  await logAuthEvent(user._id.toString(), user.email, user.name, 'login');
 
   return {
     user: { id: user._id.toString(), name: user.name, email: user.email },
@@ -95,7 +102,41 @@ export async function refreshTokens(oldRefreshToken: string): Promise<{ accessTo
 
 export async function logoutUser(refreshToken: string): Promise<void> {
   const tokenHash = sha256(refreshToken);
+  const stored = await RefreshToken.findOne({ tokenHash }).populate('user');
   await RefreshToken.deleteOne({ tokenHash });
+  if (stored && stored.user) {
+    const user = stored.user as any;
+    await logAuthEvent(user._id.toString(), user.email, user.name, 'logout');
+  }
+}
+
+export async function recordAppReturn(userId: string): Promise<void> {
+  const user = await User.findById(userId);
+  if (user) {
+    await logAuthEvent(userId, user.email, user.name, 'app_return');
+  }
+}
+
+export async function deleteOwnAccount(userId: string): Promise<void> {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  const ownedWorkspaces = await Workspace.find({ owner: userId });
+  if (ownedWorkspaces.length > 0) {
+    throw new AppError(
+      'You own one or more workspaces. Please delete or transfer ownership of them before deleting your account.',
+      400
+    );
+  }
+
+  await logAuthEvent(userId, user.email, user.name, 'account_deleted');
+
+  await Membership.deleteMany({ user: userId });
+  await RefreshToken.deleteMany({ user: userId });
+  await PasswordResetToken.deleteMany({ user: userId });
+  await User.deleteOne({ _id: userId });
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {

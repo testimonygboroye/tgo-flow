@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { register, login, refresh, logout, me, forgotPassword, resetPasswordHandler } from '../controllers/auth.controller';
+import { register, login, refresh, logout, me, forgotPassword, resetPasswordHandler, appReturn, deleteAccount } from '../controllers/auth.controller';
 import { protect } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { authLimiter, forgotPasswordLimiter } from '../middleware/rateLimiter';
@@ -38,6 +38,8 @@ router.post(
 router.post('/refresh', requireCustomHeader, refresh);
 router.post('/logout', requireCustomHeader, logout);
 router.get('/me', protect, me);
+router.post('/app-return', protect, appReturn);
+router.delete('/me', protect, deleteAccount);
 
 router.post(
   '/forgot-password',

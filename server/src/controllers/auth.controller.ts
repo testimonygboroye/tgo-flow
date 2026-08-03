@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { registerUser, loginUser, refreshTokens, logoutUser, requestPasswordReset, resetPassword } from '../services/auth.service';
+import { registerUser, loginUser, refreshTokens, logoutUser, requestPasswordReset, resetPassword, recordAppReturn, deleteOwnAccount } from '../services/auth.service';
 import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { env } from '../config/env';
@@ -107,6 +107,24 @@ export async function resetPasswordHandler(req: Request, res: Response, next: Ne
     const { token, password } = req.body;
     await resetPassword(token, password);
     res.status(200).json({ status: 'success', message: 'Password has been reset successfully.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function appReturn(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await recordAppReturn(req.userId as string);
+    res.status(200).json({ status: 'success' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await deleteOwnAccount(req.userId as string);
+    res.status(200).json({ status: 'success', message: 'Account deleted' });
   } catch (err) {
     next(err);
   }
