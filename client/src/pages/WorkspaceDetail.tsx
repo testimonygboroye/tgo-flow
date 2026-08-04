@@ -18,6 +18,7 @@ import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { HelpButton } from '../components/HelpButton';
+import { GlobalHelpSearch } from '../components/GlobalHelpSearch';
 import axios from 'axios';
 import type { MembershipRole } from '../types';
 
@@ -170,6 +171,7 @@ export function WorkspaceDetail() {
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </Link>
           <div className="flex items-center gap-2">
+            <GlobalHelpSearch />
             <HelpButton />
             <ThemeToggle />
           </div>

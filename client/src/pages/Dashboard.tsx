@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { HelpButton } from '../components/HelpButton';
+import { GlobalHelpSearch } from '../components/GlobalHelpSearch';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { WelcomePopup } from '../components/WelcomePopup';
 
@@ -62,6 +63,7 @@ export function Dashboard() {
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </div>
           <div className="flex items-center gap-4">
+            <GlobalHelpSearch />
             <HelpButton />
             <ThemeToggle />
             <div className="flex items-center gap-3">

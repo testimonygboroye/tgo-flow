@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { helpArticles, searchHelpArticles, getPublicArticles } from '../data/helpArticles';
 import type { HelpArticle } from '../data/helpArticles';
@@ -8,8 +8,16 @@ import { ThemeToggle } from '../components/ThemeToggle';
 export function HelpPage() {
   const [searchParams] = useSearchParams();
   const isPublicOnly = searchParams.get('public') === '1';
+  const articleIdFromUrl = searchParams.get('article');
   const [query, setQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<HelpArticle | null>(null);
+
+  useEffect(() => {
+    if (articleIdFromUrl) {
+      const found = helpArticles.find((a) => a.id === articleIdFromUrl);
+      if (found) setSelectedArticle(found);
+    }
+  }, [articleIdFromUrl]);
   const savedScrollY = useRef(0);
 
   const baseArticles = isPublicOnly ? getPublicArticles() : helpArticles;
