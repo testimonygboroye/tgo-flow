@@ -82,3 +82,15 @@ Deliberately out of scope for this first version — not oversights, but honest 
 ---
 
 Built by Testimony Oluwatimilehin Gboroye — TGO DevStudio.
+
+## Brand & Support Features
+
+Beyond the core product, TGO Flow includes a set of features related to **TGO DevStudio and its founder** — separate from the project's own functionality:
+
+- **Floating brand button (✦)** — a draggable button available on every page, giving access to: sending feedback, contacting the founder directly (WhatsApp/phone), and the founder's GitHub/Facebook/Instagram. For the founder's own account, it also surfaces the private Messages and User Analytics pages, and shows a live unread-message count.
+- **Feedback form** (`/feedback`) — sends a message directly and privately to the founder, with full real-time validation.
+- **Messages page** (founder-only) — every feedback submission, with read/unread/delete management.
+- **User Analytics page** (founder-only) — account creation, login, logout, and app-return activity across all users, separate from any individual workspace's own Activity tab.
+- **In-app Help Guide** (`/help`) — a searchable set of articles covering the entire product, with a lightweight public-only view shown to signed-out users on the login page.
+- **Command palette** — press `Ctrl+K` / `Cmd+K` anywhere for quick actions (navigation, theme toggle, logout).
+- **Self-service account deletion** — available from the floating brand button, protected by a typed confirmation phrase.
