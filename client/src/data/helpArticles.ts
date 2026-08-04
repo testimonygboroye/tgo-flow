@@ -11,6 +11,27 @@ export const PUBLIC_CATEGORIES = ['Getting Started'];
 
 export const helpArticles: HelpArticle[] = [
   {
+    id: 'why-logged-out',
+    category: 'Getting Started',
+    title: 'Why was I logged out even though I didn\'t click "Log out"?',
+    keywords: ['logged out', 'session', 'signed out', 'session expired'],
+    content: 'TGO Flow tries to keep you signed in for up to 30 days. On some phones and browsers, privacy settings can occasionally clear sign-in information earlier than that, especially after the app has been closed for a while. If this happens, simply log in again — it takes a few seconds, and your data is never affected.',
+  },
+  {
+    id: 'messages-page-owner',
+    category: 'For the Founder',
+    title: 'How the Messages page works (founder only)',
+    keywords: ['messages page', 'owner messages', 'feedback inbox'],
+    content: 'Only the founder\'s account can see the Messages page, reached via the floating ✦ button. It lists every piece of feedback submitted through the feedback form, with filters for All, Unread, and Read. Each message can be marked as read/unread or deleted. New messages also arrive by email automatically.',
+  },
+  {
+    id: 'analytics-page-owner',
+    category: 'For the Founder',
+    title: 'How the User Analytics page works (founder only)',
+    keywords: ['analytics page', 'owner analytics', 'activity tracking'],
+    content: 'Only the founder\'s account can see this page, reached via the floating ✦ button. It shows a live feed of account-level activity across every user — account creation, logins, logouts, and app-return events (when someone comes back after being away for a while) — separate from any individual workspace\'s own Activity tab.',
+  },
+  {
     id: 'delete-account',
     category: 'Getting Started',
     title: 'How to delete your account',
