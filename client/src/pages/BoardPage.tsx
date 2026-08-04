@@ -12,7 +12,6 @@ import { BoardFilterBar } from '../components/BoardFilterBar';
 import { TaskDetailModal } from '../components/TaskDetailModal';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { HelpButton } from '../components/HelpButton';
 import { GlobalHelpSearch } from '../components/GlobalHelpSearch';
 import { useAuthStore } from '../store/auth.store';
 import { filterTasks } from '../utils/taskFilters';
@@ -179,7 +178,6 @@ export function BoardPage() {
               </>
             )}
             <GlobalHelpSearch />
-            <HelpButton />
             <ThemeToggle />
           </div>
         </div>

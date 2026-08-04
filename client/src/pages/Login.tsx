@@ -6,7 +6,6 @@ import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
 import { PasswordInput } from '../components/PasswordInput';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { HelpButton } from '../components/HelpButton';
 import { GlobalHelpSearch } from '../components/GlobalHelpSearch';
 import axios from 'axios';
 
@@ -41,7 +40,6 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
       <div className="absolute top-6 right-6 flex items-center gap-2">
         <GlobalHelpSearch publicOnly />
-        <HelpButton publicOnly />
         <ThemeToggle />
       </div>
 

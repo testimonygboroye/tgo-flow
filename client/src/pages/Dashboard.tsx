@@ -8,9 +8,7 @@ import { logoutRequest } from '../services/auth.service';
 import { useAuthStore } from '../store/auth.store';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { HelpButton } from '../components/HelpButton';
 import { GlobalHelpSearch } from '../components/GlobalHelpSearch';
-import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { WelcomePopup } from '../components/WelcomePopup';
 
 export function Dashboard() {
@@ -21,7 +19,6 @@ export function Dashboard() {
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: memberships, isLoading } = useQuery({
     queryKey: ['workspaces'],
@@ -55,7 +52,6 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-bg">
       <WelcomePopup />
-      {showDeleteModal && <DeleteAccountModal onClose={() => setShowDeleteModal(false)} />}
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
@@ -64,7 +60,6 @@ export function Dashboard() {
           </div>
           <div className="flex items-center gap-4">
             <GlobalHelpSearch />
-            <HelpButton />
             <ThemeToggle />
             <div className="flex items-center gap-3">
               <span className="text-sm text-text-secondary hidden sm:inline">{user?.name}</span>
@@ -74,12 +69,7 @@ export function Dashboard() {
               >
                 Log out
               </button>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-danger transition hover:bg-danger/10"
-              >
-                Delete account
-              </button>
+
             </div>
           </div>
         </div>
