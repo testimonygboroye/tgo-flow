@@ -55,7 +55,7 @@ export function Dashboard() {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <Logo className="h-7 w-7" />
+            <Logo className="h-9 w-9" />
             <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
           </div>
           <div className="flex items-center gap-4">
