@@ -2,6 +2,15 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 import { buildTestApp } from './testApp';
 import { Activity } from '../models/Activity';
+import { Invite } from '../models/Invite';
+import { sendInviteEmail } from '../services/email.service';
+
+jest.mock('../services/email.service', () => ({
+  sendInviteEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+  sendReviewNotificationEmail: jest.fn().mockResolvedValue(undefined),
+  sendEmail: jest.fn().mockResolvedValue(undefined),
+}));
 
 const app = buildTestApp();
 
@@ -80,6 +89,24 @@ describe('Workspace creation and permissions', () => {
   });
 
   let inviteToken: string;
+
+  it('removes an undelivered invite so the owner can safely retry', async () => {
+    jest.mocked(sendInviteEmail).mockRejectedValueOnce(new Error('email provider unavailable'));
+
+    const res = await request(app)
+      .post(`/api/workspaces/${workspaceId}/invites`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ email: 'jest-undelivered@example.com', role: 'member' });
+
+    expect(res.status).toBe(503);
+    expect(res.body.message).toMatch(/invitation email could not be sent/i);
+    const pendingInvite = await Invite.findOne({
+      workspace: workspaceId,
+      email: 'jest-undelivered@example.com',
+      status: 'pending',
+    });
+    expect(pendingInvite).toBeNull();
+  });
 
   it('accepts the invite as the invited member', async () => {
     const res = await request(app)
