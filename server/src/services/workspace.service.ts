@@ -98,7 +98,14 @@ export async function inviteMember(
 
   const workspace = await Workspace.findById(workspaceId);
   const inviteLink = `${env.clientUrl}/invites/accept?token=${rawToken}`;
-  await sendInviteEmail(normalizedEmail, workspace?.name || 'a workspace', role, inviteLink);
+  try {
+    await sendInviteEmail(normalizedEmail, workspace?.name || 'a workspace', role, inviteLink);
+  } catch {
+    // Do not leave an unusable pending invite behind when the recipient never
+    // received its one-time token. The owner can safely retry the invitation.
+    await Invite.deleteOne({ _id: invite._id, status: 'pending' });
+    throw new AppError('The invitation email could not be sent. Please try again.', 503);
+  }
   await logActivity(workspaceId, invitedBy, 'member_invited', normalizedEmail);
 
   return { invite, rawToken };

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import * as taskService from '../services/task.service';
-import { logTaskMove } from '../services/task.service';
 import { getParam } from '../utils/params';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -52,8 +51,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 export async function move(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const boardId = getParam(req, 'boardId');
-    const task = await taskService.moveTask(getParam(req, 'taskId'), boardId, req.body.listId, req.body.position);
-    await logTaskMove(boardId, req.userId as string, task.title);
+    const task = await taskService.moveTask(getParam(req, 'taskId'), boardId, req.body.listId, req.body.position, req.userId as string);
     res.status(200).json({ status: 'success', task });
   } catch (err) {
     next(err);
