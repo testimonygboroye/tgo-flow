@@ -1,11 +1,13 @@
 import mongoose from 'mongoose';
 import request from 'supertest';
 import { buildTestApp } from './testApp';
+import { Activity } from '../models/Activity';
 
 const app = buildTestApp();
 
 let ownerToken: string;
 let memberToken: string;
+let memberId: string;
 let workspaceId: string;
 
 beforeAll(async () => {
@@ -27,6 +29,7 @@ beforeAll(async () => {
     password: 'TestPass123',
   });
   memberToken = memberRes.body.accessToken;
+  memberId = memberRes.body.user.id;
 }, 60000);
 
 afterAll(async () => {
@@ -153,6 +156,37 @@ describe('Workspace creation and permissions', () => {
       .set('Authorization', `Bearer ${memberToken}`);
 
     expect(res.status).toBe(200);
+  });
+
+  it('attributes task-move activity to the member who performed the move', async () => {
+    const boardRes = await request(app)
+      .post(`/api/workspaces/${workspaceId}/boards`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ name: 'Task Move Audit Board' });
+
+    const boardId = boardRes.body.board._id;
+    const [sourceList, targetList] = boardRes.body.lists;
+
+    const taskRes = await request(app)
+      .post(`/api/workspaces/${workspaceId}/boards/${boardId}/tasks/list/${sourceList._id}`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ title: 'Move attribution regression task' });
+    expect(taskRes.status).toBe(201);
+
+    const moveRes = await request(app)
+      .patch(`/api/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskRes.body.task._id}/move`)
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ listId: targetList._id, position: 0 });
+    expect(moveRes.status).toBe(200);
+
+    const activity = await Activity.findOne({
+      workspace: workspaceId,
+      action: 'task_moved',
+      description: /Move attribution regression task/,
+    }).sort({ createdAt: -1 });
+
+    expect(activity).toBeTruthy();
+    expect(activity?.actor.toString()).toBe(memberId);
   });
 
   it('prevents cross-tenant access to a board via a mismatched workspace ID in the URL', async () => {
