@@ -120,7 +120,7 @@ export async function updateTask(taskId: string, boardId: string, updates: Updat
  * overlapping position numbers, which causes the UI to sort incorrectly
  * (a dragged task appears to "snap back") on the next render.
  */
-export async function moveTask(taskId: string, boardId: string, newListId: string, newPosition: number) {
+export async function moveTask(taskId: string, boardId: string, newListId: string, newPosition: number, actorId: string) {
   const task = await Task.findOne({ _id: taskId, board: boardId });
   if (!task) {
     throw new AppError('Task not found', 404);
@@ -179,15 +179,10 @@ export async function moveTask(taskId: string, boardId: string, newListId: strin
 
   const board = await Board.findById(boardId);
   if (board && movedTask) {
-    await logActivity(board.workspace.toString(), movedTask.createdBy.toString(), 'task_moved', movedTask.title);
+    await logActivity(board.workspace.toString(), actorId, 'task_moved', movedTask.title);
   }
 
   return movedTask!;
-}
-
-export async function logTaskMove(_boardId: string, _actorId: string, _taskTitle: string) {
-  // Activity logging for moves happens via the task title captured before the move;
-  // kept as a thin wrapper so the controller call site doesn't need to change.
 }
 
 export async function deleteTask(taskId: string, boardId: string) {
