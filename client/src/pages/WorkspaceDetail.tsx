@@ -67,7 +67,10 @@ export function WorkspaceDetail() {
     enabled: !!workspaceId && tab === 'activity',
   });
 
-  const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
+  const currentUserId = user?.id;
+  const myMembership = currentUserId
+    ? members?.find((m) => m.user.id === currentUserId || m.user._id === currentUserId)
+    : undefined;
   const myRole = myMembership?.role;
   const canManage = myRole === 'owner' || myRole === 'admin';
 
@@ -410,7 +413,8 @@ export function WorkspaceDetail() {
             ) : (
               <div className="overflow-hidden rounded-xl border border-border bg-surface">
                 {members?.map((m, i) => {
-                  const isSelf = m.user.id === user?.id;
+                  const memberUserId = m.user.id || m.user._id;
+                  const isSelf = Boolean(currentUserId && memberUserId === currentUserId);
                   const canModifyThisMember = canManage && m.role !== 'owner' && !isSelf;
 
                   return (
@@ -427,14 +431,14 @@ export function WorkspaceDetail() {
                         <div className="flex flex-shrink-0 items-center gap-2">
                           <select
                             value={m.role}
-                            onChange={(e) => handleRoleChange(m.user.id, e.target.value as MembershipRole)}
+                            onChange={(e) => handleRoleChange(memberUserId, e.target.value as MembershipRole)}
                             className="rounded-lg border border-border bg-bg px-2 py-1 text-xs text-text-primary outline-none focus:border-brand-violet"
                           >
                             <option value="member">Member</option>
                             <option value="admin">Admin</option>
                           </select>
                           <button
-                            onClick={() => handleRemoveMember(m.user.id, m.user.name)}
+                            onClick={() => handleRemoveMember(memberUserId, m.user.name)}
                             className="rounded-lg px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10"
                           >
                             Remove
