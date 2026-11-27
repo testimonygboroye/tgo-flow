@@ -25,7 +25,7 @@ export function AcceptInvite() {
       setStatus('error');
       setMessage('This invite link is missing a token.');
     }
-  }, [isInitialized, accessToken, token]);
+  }, [isInitialized, accessToken, token, navigate]);
 
   async function handleAccept() {
     if (!token) return;
