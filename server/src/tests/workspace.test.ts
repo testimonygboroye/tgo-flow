@@ -1,3 +1,9 @@
+// Workspace tests verify persistence and authorization, not Brevo availability.
+jest.mock('../services/email.service', () => ({
+  sendInviteEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+}));
+
 import mongoose from 'mongoose';
 import request from 'supertest';
 import { buildTestApp } from './testApp';
