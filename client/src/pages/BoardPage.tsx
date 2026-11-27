@@ -52,7 +52,10 @@ export function BoardPage() {
     enabled: !!workspaceId,
   });
 
-  const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
+  const currentUserId = user?.id;
+  const myMembership = currentUserId
+    ? members?.find((m) => m.user.id === currentUserId || m.user._id === currentUserId)
+    : undefined;
   const canManage = myMembership?.role === 'owner' || myMembership?.role === 'admin';
 
   const filteredTasks = filterTasks(tasks || [], { searchTerm, selectedLabels, selectedAssigneeIds });
