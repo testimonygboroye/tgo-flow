@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/auth.store';
-import type { Task, List } from '../types';
+import type { Board, Comment, Task, List } from '../types';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
@@ -59,18 +59,18 @@ export function useBoardSocket(boardId: string | undefined, workspaceId: string 
     });
 
     socket.on('list:created', (list: List) => {
-      queryClient.setQueryData<{ board: any; lists: List[] } | undefined>(listsKey, (old) =>
+      queryClient.setQueryData<{ board: Board; lists: List[] } | undefined>(listsKey, (old) =>
         old ? { ...old, lists: [...old.lists, list] } : old
       );
     });
 
     socket.on('list:deleted', ({ listId }: { listId: string }) => {
-      queryClient.setQueryData<{ board: any; lists: List[] } | undefined>(listsKey, (old) =>
+      queryClient.setQueryData<{ board: Board; lists: List[] } | undefined>(listsKey, (old) =>
         old ? { ...old, lists: old.lists.filter((l) => l._id !== listId) } : old
       );
     });
 
-    socket.on('comment:created', (comment: any) => {
+    socket.on('comment:created', (comment: Comment) => {
       queryClient.invalidateQueries({ queryKey: ['comments', comment.task] });
     });
 
