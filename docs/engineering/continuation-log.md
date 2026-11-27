@@ -10,3 +10,5 @@
 - Next: verify the rerun and keep external provider delivery out of persistence/authorization integration tests.
 
 - Follow-up Backend Tests run 46016518508 passed the test suite and build check on `2cd2dde5b88b49ebe64a816d1a0172cf434c1e84`; PR #2 remains open and unmerged.
+
+- Rechecked the final PR #2 head `aa5f1290940041acd824a280c84a0bf552c703b6`; Backend Tests run 46016939734 passed.
