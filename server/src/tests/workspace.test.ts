@@ -1,3 +1,9 @@
+// Workspace tests verify persistence and authorization, not Brevo availability.
+jest.mock('../services/email.service', () => ({
+  sendInviteEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+}));
+
 import mongoose from 'mongoose';
 import request from 'supertest';
 import { buildTestApp } from './testApp';
@@ -156,7 +162,6 @@ describe('Workspace creation and permissions', () => {
   });
 
   it('prevents cross-tenant access to a board via a mismatched workspace ID in the URL', async () => {
-    // Create a second, completely separate workspace + board owned by the same owner
     const otherWorkspaceRes = await request(app)
       .post('/api/workspaces')
       .set('Authorization', `Bearer ${ownerToken}`)
@@ -169,7 +174,6 @@ describe('Workspace creation and permissions', () => {
       .send({ name: 'A Board In The Other Workspace' });
     const otherBoardId = otherBoardRes.body.board._id;
 
-    // Attempt to access the OTHER workspace's board through THIS workspace's URL
     const res = await request(app)
       .get(`/api/workspaces/${workspaceId}/boards/${otherBoardId}`)
       .set('Authorization', `Bearer ${ownerToken}`);

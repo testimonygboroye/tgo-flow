@@ -67,7 +67,7 @@ export function WorkspaceDetail() {
     enabled: !!workspaceId && tab === 'activity',
   });
 
-  const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
+  const myMembership = members?.find((m) => m.user.id === user?.id || m.user._id === user?.id);
   const myRole = myMembership?.role;
   const canManage = myRole === 'owner' || myRole === 'admin';
 

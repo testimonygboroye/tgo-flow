@@ -60,6 +60,6 @@ export interface Comment {
 
 export interface Member {
   membershipId: string;
-  user: User;
+  user: User & { _id?: string };
   role: MembershipRole;
 }
