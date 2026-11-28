@@ -67,7 +67,7 @@ export function WorkspaceDetail() {
     enabled: !!workspaceId && tab === 'activity',
   });
 
-  const myMembership = members?.find((m) => m.user.id === user?.id || (m.user as any)._id === user?.id);
+  const myMembership = members?.find((m) => m.user.id === user?.id || m.user._id === user?.id);
   const myRole = myMembership?.role;
   const canManage = myRole === 'owner' || myRole === 'admin';
 
@@ -122,150 +122,140 @@ export function WorkspaceDetail() {
       setIsEditingName(false);
       return;
     }
-    await updateWorkspaceNameRequest(workspaceId, editedName.trim());
-    queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
-    setIsEditingName(false);
+    try {
+      await updateWorkspaceNameRequest(workspaceId, editedName.trim());
+      queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
+      setIsEditingName(false);
+    } catch {
+      setMemberActionError('Could not update the workspace name. Please try again.');
+    }
   }
 
   async function handleDeleteWorkspace() {
     if (!workspaceId || !workspace) return;
-    if (!confirm(`Delete "${workspace.name}"? This will permanently delete all its boards and tasks. This cannot be undone.`)) return;
-    await deleteWorkspaceRequest(workspaceId);
-    navigate('/dashboard');
+    if (!confirm(`Delete "${workspace.name}"? All boards, tasks, comments, invites and activity will be permanently deleted. This cannot be undone.`)) return;
+    try {
+      await deleteWorkspaceRequest(workspaceId);
+      navigate('/workspaces');
+    } catch {
+      setMemberActionError('Could not delete this workspace. Please try again.');
+    }
   }
 
   async function handleLeaveWorkspace() {
     if (!workspaceId || !workspace) return;
     if (!confirm(`Leave "${workspace.name}"? You will need a new invite to rejoin.`)) return;
-    await leaveWorkspaceRequest(workspaceId);
-    navigate('/dashboard');
+    try {
+      await leaveWorkspaceRequest(workspaceId);
+      navigate('/workspaces');
+    } catch {
+      setMemberActionError('Could not leave this workspace. Please try again.');
+    }
   }
 
   async function handleInvite(e: FormEvent) {
     e.preventDefault();
-    if (!inviteEmail.trim() || !workspaceId) return;
+    if (!workspaceId || !inviteEmail.trim()) return;
     setInviteError(null);
     setInviteLink(null);
     try {
       const result = await inviteMemberRequest(workspaceId, inviteEmail.trim(), inviteRole);
-      const link = `${window.location.origin}/invites/accept?token=${result.inviteToken}`;
-      setInviteLink(link);
+      setInviteLink(result.invite?.id ?? 'sent');
       setInviteEmail('');
-      queryClient.invalidateQueries({ queryKey: ['members', workspaceId] });
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         setInviteError(err.response.data.message);
       } else {
-        setInviteError('Could not send invite. Please try again.');
+        setInviteError('Could not send the invite. Please try again.');
       }
     }
+  }
+
+  if (!workspace) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-bg">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-violet border-t-transparent" />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-bg">
       <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link to="/dashboard" className="flex items-center gap-2.5">
-            <Logo className="h-7 w-7" />
-            <span className="font-display text-lg font-bold text-text-primary">TGO Flow</span>
-          </Link>
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Link to="/workspaces" className="flex items-center gap-2.5">
+              <Logo className="h-7 w-7" />
+            </Link>
+            <span className="text-text-secondary">/</span>
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveWorkspaceName()}
+                  className="rounded-lg border border-border bg-bg px-2.5 py-1 text-lg font-bold text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                />
+                <button onClick={handleSaveWorkspaceName} className="rounded-lg bg-brand-gradient px-2.5 py-1 text-xs font-medium text-white">
+                  Save
+                </button>
+                <button onClick={() => setIsEditingName(false)} className="rounded-lg px-2.5 py-1 text-xs text-text-secondary hover:bg-surface-hover">
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <h1 className="font-display text-lg font-bold text-text-primary">{workspace.name}</h1>
+            )}
+          </div>
           <div className="flex items-center gap-2">
+            {canManage && (
+              <button
+                onClick={() => { setEditedName(workspace.name); setIsEditingName(true); }}
+                className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-text-primary hover:bg-surface-hover"
+              >
+                Rename
+              </button>
+            )}
+            {myRole === 'owner' && (
+              <button
+                onClick={handleDeleteWorkspace}
+                className="rounded-lg border border-danger/30 px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger/10"
+              >
+                Delete workspace
+              </button>
+            )}
+            {myRole !== 'owner' && (
+              <button
+                onClick={handleLeaveWorkspace}
+                className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-text-secondary hover:bg-surface-hover"
+              >
+                Leave
+              </button>
+            )}
             <GlobalHelpSearch />
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        {workspace && (
-          <div className="mb-6 flex items-center justify-between gap-3">
-            {isEditingName ? (
-              <div className="flex flex-1 items-center gap-2">
-                <input
-                  autoFocus
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSaveWorkspaceName()}
-                  className="flex-1 rounded-lg border border-border bg-bg px-3 py-1.5 font-display text-xl font-bold text-text-primary outline-none focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
-                />
-                <button onClick={handleSaveWorkspaceName} className="rounded-lg bg-brand-gradient px-3 py-1.5 text-sm font-medium text-white">
-                  Save
-                </button>
-                <button onClick={() => setIsEditingName(false)} className="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-hover">
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <>
-                <h1 className="font-display text-2xl font-bold text-text-primary">{workspace.name}</h1>
-                <div className="flex flex-shrink-0 items-center gap-2">
-                  {canManage && (
-                    <button
-                      onClick={() => { setEditedName(workspace.name); setIsEditingName(true); }}
-                      className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
-                    >
-                      Rename
-                    </button>
-                  )}
-                  {myRole === 'owner' && (
-                    <button
-                      onClick={handleDeleteWorkspace}
-                      className="rounded-lg border border-danger/30 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  {myRole && myRole !== 'owner' && (
-                    <button
-                      onClick={handleLeaveWorkspace}
-                      className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface-hover"
-                    >
-                      Leave
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {memberActionError && (
-          <div className="mb-4 rounded-lg bg-danger/10 border border-danger/20 px-4 py-2.5 text-sm text-danger">
-            {memberActionError}
-          </div>
+          <div className="mb-6 rounded-lg border border-danger/20 bg-danger/10 px-4 py-2.5 text-sm text-danger">{memberActionError}</div>
         )}
 
-        <div className="mb-6 flex gap-1 border-b border-border">
-          <button
-            onClick={() => setTab('boards')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition ${
-              tab === 'boards'
-                ? 'border-brand-violet text-brand-violet'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Boards
-          </button>
-          <button
-            onClick={() => setTab('members')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition ${
-              tab === 'members'
-                ? 'border-brand-violet text-brand-violet'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Members
-          </button>
-          <button
-            onClick={() => setTab('activity')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition ${
-              tab === 'activity'
-                ? 'border-brand-violet text-brand-violet'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Activity
-          </button>
+        <div className="mb-8 flex gap-1 border-b border-border">
+          {(['boards', 'members', 'activity'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`border-b-2 px-4 py-2.5 text-sm font-medium capitalize transition ${
+                tab === t ? 'border-brand-violet text-brand-violet' : 'border-transparent text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
 
         {tab === 'boards' && (
